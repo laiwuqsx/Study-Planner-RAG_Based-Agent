@@ -1,0 +1,16 @@
+[project]
+name = "study-planner-agent"
+version = "0.1.0"
+description = "Retrieval-augmented study planner agent for student course review"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn>=0.30.0",
+    "python-dotenv>=1.0.1",
+    "pydantic>=2.8.0",
+    "sqlalchemy>=2.0.36",
+    "psycopg2-binary>=2.9.10",
+    "python-jose[cryptography]>=3.3.0",
+]
+
