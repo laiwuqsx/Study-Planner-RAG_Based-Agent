@@ -68,6 +68,8 @@ class Document(Base):
 
     course = relationship("Course", back_populates="documents")
     processing_jobs = relationship("ProcessingJob", back_populates="document", cascade="all, delete-orphan")
+    parent_chunks = relationship("ParentChunk", back_populates="document", cascade="all, delete-orphan")
+    child_chunks = relationship("ChildChunk", back_populates="document", cascade="all, delete-orphan")
 
 
 class ProcessingJob(Base):
@@ -92,3 +94,61 @@ class ProcessingJob(Base):
 
     course = relationship("Course", back_populates="processing_jobs")
     document = relationship("Document", back_populates="processing_jobs")
+
+
+class ParentChunk(Base):
+    __tablename__ = "parent_chunks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True)
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    material_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    page_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    section_title: Mapped[str] = mapped_column(String(255), default="", nullable=False)
+    root_chunk_id: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
+    chunk_level: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    document = relationship("Document", back_populates="parent_chunks")
+    children = relationship("ChildChunk", back_populates="parent_chunk", cascade="all, delete-orphan")
+
+
+class ChildChunk(Base):
+    __tablename__ = "child_chunks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True)
+    parent_chunk_id: Mapped[int] = mapped_column(
+        ForeignKey("parent_chunks.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    material_type: Mapped[str] = mapped_column(String(40), nullable=False)
+    page_number: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    section_title: Mapped[str] = mapped_column(String(255), default="", nullable=False)
+    chunk_id: Mapped[str] = mapped_column(String(120), nullable=False, unique=True, index=True)
+    root_chunk_id: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    chunk_level: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
+    text: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    document = relationship("Document", back_populates="child_chunks")
+    parent_chunk = relationship("ParentChunk", back_populates="children")

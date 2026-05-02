@@ -102,3 +102,53 @@ class ProcessingJobResponse(BaseModel):
 class UploadDocumentResponse(BaseModel):
     document: DocumentResponse
     job: ProcessingJobResponse
+
+
+class ParentChunkResponse(BaseModel):
+    id: int
+    page_number: int | None
+    section_title: str
+    root_chunk_id: str
+    chunk_level: int
+    chunk_index: int
+    text: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class ChildChunkResponse(BaseModel):
+    id: int
+    parent_chunk_id: int
+    page_number: int | None
+    section_title: str
+    chunk_id: str
+    root_chunk_id: str
+    chunk_level: int
+    chunk_index: int
+    text: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentChunkSummaryResponse(BaseModel):
+    document_id: int
+    parent_chunks: list[ParentChunkResponse]
+    child_chunks: list[ChildChunkResponse]
+
+
+class SearchResultResponse(BaseModel):
+    chunk_id: str
+    root_chunk_id: str
+    parent_chunk_id: int
+    document_id: int
+    filename: str
+    material_type: str
+    page_number: int | None
+    section_title: str
+    text: str
+    score: float
+
+
+class SearchResponse(BaseModel):
+    query: str
+    results: list[SearchResultResponse]

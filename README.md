@@ -30,6 +30,21 @@ Retrieval-augmented study planner agent for students.
 - Job status endpoint
 - Frontend upload workspace with progress polling
 
+### Phase 3: Document Parsing and Chunking
+
+- PDF text extraction
+- DOCX text extraction
+- Hierarchical parent/child chunking
+- Parent and child chunk persistence
+- Chunk inspection endpoint
+
+### Phase 4: Retrieval Indexing
+
+- Retriever abstraction
+- PostgreSQL keyword search baseline over child chunks
+- Course-scoped search API
+- Search page in the frontend
+
 ## Prerequisites
 
 Install the local development tools:
@@ -68,6 +83,8 @@ DATABASE_URL=postgresql+psycopg2://<db_user>:<db_password>@127.0.0.1:5433/study_
 ```
 
 For local Docker defaults, use the database credentials configured in `docker-compose.yml` or override them through your own uncommitted `.env`.
+
+SQLite can still be used as an explicit fallback for quick experiments, but PostgreSQL is the intended default for the project.
 
 Start backend:
 
@@ -143,6 +160,22 @@ uv run python scripts/smoke_phase2.py
 ```
 
 The script uploads a placeholder DOCX, polls the background job to completion, verifies the document appears in the course, and checks cross-user job isolation.
+
+Run Phase 3 smoke test after backend is running:
+
+```bash
+uv run python scripts/smoke_phase3.py
+```
+
+The script uploads generated DOCX and PDF samples, waits for parsing and hierarchical chunking to finish, and verifies that parent and child chunks were persisted.
+
+Run Phase 4 smoke test after backend is running:
+
+```bash
+uv run python scripts/smoke_phase4.py
+```
+
+The script uploads a sample DOCX, waits for chunk processing, and verifies that PostgreSQL search returns matching child chunks for a course-scoped query.
 
 ## Frontend Commands
 
@@ -224,7 +257,7 @@ For PostgreSQL, set:
 DATABASE_URL=postgresql+psycopg2://<db_user>:<db_password>@127.0.0.1:5433/study_planner
 ```
 
-For local SQLite-only backend development, keep:
+SQLite remains optional for quick throwaway local runs only:
 
 ```env
 DATABASE_URL=sqlite:///./study_planner.db

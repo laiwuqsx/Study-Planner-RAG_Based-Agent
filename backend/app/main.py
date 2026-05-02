@@ -1,13 +1,9 @@
-import os
-
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.app.api import router
+from backend.app.config import HOST, PORT
 from backend.app.database import init_db
-
-load_dotenv()
 
 
 def create_app() -> FastAPI:
@@ -41,7 +37,6 @@ if __name__ == "__main__":
 
     uvicorn.run(
         app,
-        host=os.getenv("HOST", "0.0.0.0"),
-        port=int(os.getenv("PORT", "8000")),
+        host=HOST,
+        port=PORT,
     )
-

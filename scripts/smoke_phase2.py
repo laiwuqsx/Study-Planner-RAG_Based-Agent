@@ -4,10 +4,34 @@ import tempfile
 import time
 import urllib.error
 import urllib.request
+import zipfile
 
 
 BASE_URL = "http://127.0.0.1:8000"
 DOCX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+
+
+def write_sample_docx(path: pathlib.Path) -> None:
+    content_types = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>"""
+    rels = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>"""
+    document = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p><w:r><w:t>Phase 2 upload placeholder</w:t></w:r></w:p>
+  </w:body>
+</w:document>"""
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("[Content_Types].xml", content_types)
+        archive.writestr("_rels/.rels", rels)
+        archive.writestr("word/document.xml", document)
 
 
 def request_json(path: str, method: str = "GET", payload: dict | None = None, token: str | None = None) -> dict:
@@ -73,8 +97,8 @@ def main() -> None:
     )
 
     with tempfile.NamedTemporaryFile(suffix=".docx", delete=False) as handle:
-        handle.write(b"phase 2 upload placeholder")
         temp_path = pathlib.Path(handle.name)
+    write_sample_docx(temp_path)
 
     try:
         upload_payload = upload_document(temp_path, course["id"], owner["access_token"])

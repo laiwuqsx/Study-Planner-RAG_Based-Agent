@@ -147,6 +147,11 @@ h3 {
   gap: 18px;
 }
 
+.chunk-page {
+  display: grid;
+  gap: 18px;
+}
+
 .auth-copy {
   padding: 24px 0;
 }
@@ -168,6 +173,12 @@ h3 {
 .form-stack {
   display: grid;
   gap: 14px;
+}
+
+.search-form {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .section-heading {
@@ -252,6 +263,51 @@ h3 {
   padding: 14px 16px;
 }
 
+.document-actions {
+  align-items: flex-end;
+  display: grid;
+  gap: 8px;
+  justify-items: end;
+}
+
+.chunk-layout {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.chunk-list {
+  display: grid;
+  gap: 12px;
+}
+
+.chunk-card {
+  border: 1px solid #e4e8f1;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.chunk-card pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.result-actions {
+  margin-top: 12px;
+}
+
+.chunk-meta {
+  color: #5d667a;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
 .status-badge {
   border-radius: 999px;
   font-size: 12px;
@@ -300,6 +356,18 @@ h3 {
 
   .auth-layout,
   .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .document-actions {
+    justify-items: stretch;
+  }
+
+  .chunk-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .search-form {
     grid-template-columns: 1fr;
   }
 }
