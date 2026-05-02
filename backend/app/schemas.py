@@ -59,3 +59,46 @@ class DeleteResponse(BaseModel):
     id: int
     message: str
 
+
+class DocumentResponse(BaseModel):
+    id: int
+    course_id: int
+    filename: str
+    file_type: str
+    material_type: str
+    status: str
+    chunk_count: int
+    topic_count: int
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentResponse]
+
+
+class JobStepResponse(BaseModel):
+    step: str
+    status: str
+    message: str = ""
+
+
+class ProcessingJobResponse(BaseModel):
+    id: int
+    user_id: int
+    course_id: int
+    document_id: int
+    status: str
+    current_step: str
+    message: str
+    error: str
+    steps: list[JobStepResponse]
+    created_at: datetime
+    updated_at: datetime
+
+
+class UploadDocumentResponse(BaseModel):
+    document: DocumentResponse
+    job: ProcessingJobResponse

@@ -21,6 +21,15 @@ Retrieval-augmented study planner agent for students.
 - User-scoped course access
 - SQLAlchemy base models
 
+### Phase 2: Document Upload and Background Jobs
+
+- PDF and DOCX upload endpoint
+- User-scoped document records
+- Local file storage
+- Background processing job lifecycle
+- Job status endpoint
+- Frontend upload workspace with progress polling
+
 ## Prerequisites
 
 Install the local development tools:
@@ -126,6 +135,14 @@ uv run python scripts/smoke_phase1.py
 ```
 
 The script registers two users, creates a course for one user, and verifies the second user cannot access it.
+
+Run Phase 2 smoke test after backend is running:
+
+```bash
+uv run python scripts/smoke_phase2.py
+```
+
+The script uploads a placeholder DOCX, polls the background job to completion, verifies the document appears in the course, and checks cross-user job isolation.
 
 ## Frontend Commands
 
