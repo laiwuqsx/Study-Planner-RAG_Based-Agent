@@ -41,7 +41,9 @@ Retrieval-augmented study planner agent for students.
 ### Phase 4: Retrieval Indexing
 
 - Retriever abstraction
-- PostgreSQL keyword search baseline over child chunks
+- PostgreSQL keyword retrieval over child chunks
+- Milvus vector retrieval over child chunks
+- Hybrid retrieval via reciprocal-rank fusion
 - Course-scoped search API
 - Search page in the frontend
 
@@ -176,6 +178,14 @@ uv run python scripts/smoke_phase4.py
 ```
 
 The script uploads a sample DOCX, waits for chunk processing, and verifies that PostgreSQL search returns matching child chunks for a course-scoped query.
+
+Run the Phase 4 vector smoke test after backend is running:
+
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase4_vector.py
+```
+
+The script uploads a sample DOCX, waits for indexing to finish, and verifies that vector and hybrid retrieval return course-scoped results through Milvus. Keep `EMBEDDING_PROVIDER=voyage` in your real `.env`; the `hash` override is only for deterministic local verification without hitting the remote embedding API.
 
 ## Frontend Commands
 

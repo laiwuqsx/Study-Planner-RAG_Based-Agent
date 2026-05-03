@@ -151,4 +151,5 @@ class SearchResultResponse(BaseModel):
 
 class SearchResponse(BaseModel):
     query: str
+    retrieval_mode: str
     results: list[SearchResultResponse]

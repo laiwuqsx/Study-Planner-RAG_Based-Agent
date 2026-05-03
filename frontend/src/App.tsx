@@ -37,6 +37,7 @@ export default function App() {
   const [chunkSummary, setChunkSummary] = useState<DocumentChunkSummary | null>(null);
   const [chunkLoading, setChunkLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [retrievalMode, setRetrievalMode] = useState('keyword');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -218,7 +219,7 @@ export default function App() {
     setMessage('');
     try {
       const payload = await apiFetch<SearchResponse>(
-        `/courses/${courseId}/search?query=${encodeURIComponent(searchQuery.trim())}&top_k=8`,
+        `/courses/${courseId}/search?query=${encodeURIComponent(searchQuery.trim())}&retrieval_mode=${retrievalMode}&top_k=8`,
       );
       setSearchResults(payload.results);
     } catch (error) {
@@ -374,9 +375,11 @@ export default function App() {
         <SearchView
           course={selectedCourse}
           query={searchQuery}
+          retrievalMode={retrievalMode}
           results={searchResults}
           loading={searchLoading}
           onQueryChange={setSearchQuery}
+          onRetrievalModeChange={setRetrievalMode}
           onSubmit={handleSearchSubmit}
         />
       ) : route.name === 'document-chunks' ? (

@@ -14,6 +14,7 @@ router = APIRouter(prefix="/courses/{course_id}/search", tags=["search"])
 async def search_course_chunks(
     course: Course = Depends(get_user_course_or_404),
     query: str = Query(min_length=1, max_length=300),
+    retrieval_mode: str = Query(default="keyword", pattern="^(keyword|vector|hybrid)$"),
     top_k: int = Query(default=8, ge=1, le=20),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -28,5 +29,10 @@ async def search_course_chunks(
         user_id=current_user.id,
         course_id=course.id,
         top_k=top_k,
+        retrieval_mode=retrieval_mode,
     )
-    return SearchResponse(query=cleaned, results=[SearchResultResponse(**result) for result in results])
+    return SearchResponse(
+        query=cleaned,
+        retrieval_mode=retrieval_mode,
+        results=[SearchResultResponse(**result) for result in results],
+    )

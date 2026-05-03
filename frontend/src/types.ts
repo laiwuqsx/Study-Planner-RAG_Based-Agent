@@ -107,5 +107,6 @@ export type SearchResult = {
 
 export type SearchResponse = {
   query: string;
+  retrieval_mode: string;
   results: SearchResult[];
 };

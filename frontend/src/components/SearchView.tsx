@@ -6,18 +6,22 @@ import { Course, SearchResult } from '../types';
 type SearchViewProps = {
   course: Course | null;
   query: string;
+  retrievalMode: string;
   results: SearchResult[];
   loading: boolean;
   onQueryChange: (value: string) => void;
+  onRetrievalModeChange: (value: string) => void;
   onSubmit: (event: FormEvent) => void;
 };
 
 export function SearchView({
   course,
   query,
+  retrievalMode,
   results,
   loading,
   onQueryChange,
+  onRetrievalModeChange,
   onSubmit,
 }: SearchViewProps) {
   return (
@@ -28,7 +32,7 @@ export function SearchView({
             <p className="eyebrow">Course Search</p>
             <h2>{course ? course.name : 'Search materials'}</h2>
             <p className="section-copy">
-              Search child chunks inside one course using the PostgreSQL retrieval baseline.
+              Search child chunks inside one course with keyword, vector, or hybrid retrieval.
             </p>
           </div>
           <button type="button" className="link-button" onClick={navigateToWorkspace}>Back to workspace</button>
@@ -39,6 +43,11 @@ export function SearchView({
             onChange={(event) => onQueryChange(event.target.value)}
             placeholder="Search a topic, term, or concept"
           />
+          <select value={retrievalMode} onChange={(event) => onRetrievalModeChange(event.target.value)}>
+            <option value="keyword">Keyword</option>
+            <option value="vector">Vector</option>
+            <option value="hybrid">Hybrid</option>
+          </select>
           <button type="submit" disabled={loading || !query.trim()}>
             {loading ? 'Searching...' : 'Search'}
           </button>

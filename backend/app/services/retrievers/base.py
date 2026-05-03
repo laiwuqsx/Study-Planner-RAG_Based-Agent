@@ -11,5 +11,5 @@ class BaseRetriever(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def search(self, *, query: str, user_id: int, course_id: int, top_k: int) -> list[dict]:
+    def search(self, *, query: str, user_id: int, course_id: int, top_k: int, retrieval_mode: str) -> list[dict]:
         raise NotImplementedError
