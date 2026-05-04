@@ -4,7 +4,9 @@ from collections import Counter, defaultdict
 
 from sqlalchemy.orm import Session
 
+from backend.app.config import CHAT_API_KEY, TOPIC_EXTRACTION_MODE
 from backend.app.models import ChildChunk, Course, Document, ParentChunk, Topic
+from backend.app.services.llm_chat import ChatProviderError, run_chat_completion
 
 STOPWORDS = {
     "a",
@@ -71,7 +73,7 @@ def refresh_course_topics(db: Session, *, course: Course) -> list[Topic]:
         .filter(Document.user_id == course.user_id, Document.course_id == course.id)
         .all()
     )
-    topics_payload = _extract_topics(parents=parents, children=children)
+    topics_payload = _extract_topics_with_llm(documents=documents, parents=parents, children=children)
 
     db.query(Topic).filter(Topic.user_id == course.user_id, Topic.course_id == course.id).delete()
     db.commit()
@@ -164,6 +166,52 @@ def normalize_topic_name(value: str) -> str:
     return " ".join(normalized.split())
 
 
+def _extract_topics_with_llm(*, documents: list[Document], parents: list[ParentChunk], children: list[ChildChunk]) -> list[dict]:
+    if not _should_use_llm_for_topics():
+        return _extract_topics(parents=parents, children=children)
+
+    parents_by_document: dict[int, list[ParentChunk]] = defaultdict(list)
+    for parent in parents:
+        parents_by_document[parent.document_id].append(parent)
+
+    children_by_root: dict[str, list[ChildChunk]] = defaultdict(list)
+    for child in children:
+        children_by_root[child.root_chunk_id].append(child)
+
+    accumulated_topics: list[dict] = []
+    for document in sorted(documents, key=lambda item: item.id):
+        document_parents = parents_by_document.get(document.id, [])
+        if not document_parents:
+            continue
+        candidates = []
+        for parent in document_parents:
+            source_chunk_ids = [child.chunk_id for child in children_by_root.get(parent.root_chunk_id, [])]
+            if not source_chunk_ids:
+                continue
+            candidates.append(
+                {
+                    "candidate_id": parent.root_chunk_id,
+                    "filename": document.filename,
+                    "material_type": document.material_type,
+                    "section_title": parent.section_title,
+                    "summary_text": _build_description(parent.text) or " ".join(parent.text.split())[:260],
+                    "keywords": _extract_keywords(parent.text, parent.section_title)[:6],
+                    "source_chunk_ids": source_chunk_ids,
+                }
+            )
+        if not candidates:
+            continue
+
+        try:
+            merged_topics = _merge_document_topics_with_llm(existing_topics=accumulated_topics, candidates=candidates)
+            accumulated_topics = _merge_topic_lists(accumulated_topics, _normalize_topics_payload(merged_topics))
+        except ChatProviderError:
+            document_topics = _extract_topics(parents=document_parents, children=children)
+            accumulated_topics = _merge_topic_lists(accumulated_topics, document_topics)
+
+    return accumulated_topics
+
+
 def _extract_topics(*, parents: list[ParentChunk], children: list[ChildChunk]) -> list[dict]:
     child_by_root: dict[str, list[ChildChunk]] = defaultdict(list)
     for child in children:
@@ -209,6 +257,63 @@ def _extract_topics(*, parents: list[ParentChunk], children: list[ChildChunk]) -
         if entry["source_chunk_ids"]:
             merged_topics.append(entry)
     return sorted(merged_topics, key=lambda item: (-item["importance"], -item["difficulty"], item["name"]))
+
+
+def _merge_document_topics_with_llm(*, existing_topics: list[dict], candidates: list[dict]) -> list[dict]:
+    prompt = _build_topic_merge_prompt(existing_topics=existing_topics, candidates=candidates)
+    response = run_chat_completion(
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You maintain a stable course topic catalog. "
+                    "Merge new document sections into existing high-level study topics whenever possible. "
+                    "Ignore grading criteria, due dates, submission instructions, course codes, and other administrative fragments. "
+                    "Prefer broad technical concepts over section headers. "
+                    "Return JSON only."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.1,
+        max_tokens=900,
+    )
+    payload = _parse_json_object(response)
+    topics = payload.get("topics")
+    if not isinstance(topics, list):
+        raise ChatProviderError("Topic extractor did not return a topics list")
+    return topics
+
+
+def _build_topic_merge_prompt(*, existing_topics: list[dict], candidates: list[dict]) -> str:
+    return json.dumps(
+        {
+            "task": (
+                "Update the course topic catalog using the new candidates. "
+                "Reuse existing topics whenever a candidate clearly belongs there. "
+                "Create a new topic only for a distinct technical concept. "
+                "Drop candidates that are purely administrative or too narrow to be a study topic."
+            ),
+            "output_schema": {
+                "topics": [
+                    {
+                        "topic_key": "stable string key; keep existing keys when reusing a topic",
+                        "name": "high-level topic name",
+                        "description": "one concise sentence",
+                        "keywords": ["3-6 technical terms or short phrases"],
+                        "importance": "integer 1-5",
+                        "difficulty": "integer 1-5",
+                        "source_chunk_ids": ["source chunk ids that belong to this topic"],
+                        "prerequisites": ["0-3 prerequisite concepts"],
+                    }
+                ]
+            },
+            "existing_topics": existing_topics,
+            "new_candidates": candidates,
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
 
 
 def _choose_topic_name(parent: ParentChunk) -> str:
@@ -281,3 +386,85 @@ def _unique_preserve_order(values: list[str]) -> list[str]:
         seen.add(normalized)
         result.append(value.strip())
     return result
+
+
+def _merge_topic_lists(existing_topics: list[dict], new_topics: list[dict]) -> list[dict]:
+    topics_by_name: dict[str, dict] = {topic["normalized_name"]: {**topic} for topic in existing_topics}
+    for topic in new_topics:
+        normalized_name = topic["normalized_name"]
+        current = topics_by_name.get(normalized_name)
+        if current is None:
+            topics_by_name[normalized_name] = {**topic}
+            continue
+        current["keywords"] = _unique_preserve_order(current["keywords"] + topic["keywords"])[:6]
+        current["source_chunk_ids"] = _unique_preserve_order(current["source_chunk_ids"] + topic["source_chunk_ids"])
+        current["prerequisites"] = _unique_preserve_order(current["prerequisites"] + topic["prerequisites"])
+        current["importance"] = max(current["importance"], topic["importance"])
+        current["difficulty"] = max(current["difficulty"], topic["difficulty"])
+        if len(topic["description"]) > len(current["description"]):
+            current["description"] = topic["description"]
+    return sorted(topics_by_name.values(), key=lambda item: (-item["importance"], -item["difficulty"], item["name"]))
+
+
+def _normalize_topics_payload(topics: list[dict]) -> list[dict]:
+    normalized: list[dict] = []
+    for index, topic in enumerate(topics, start=1):
+        name = " ".join(str(topic.get("name", "")).strip().split())
+        normalized_name = normalize_topic_name(name)
+        source_chunk_ids = _unique_preserve_order([str(item).strip() for item in topic.get("source_chunk_ids", []) if str(item).strip()])
+        if not normalized_name or not source_chunk_ids:
+            continue
+        keywords = _unique_preserve_order([str(item).strip() for item in topic.get("keywords", []) if str(item).strip()])[:6]
+        prerequisites = _unique_preserve_order([str(item).strip() for item in topic.get("prerequisites", []) if str(item).strip()])[:4]
+        normalized.append(
+            {
+                "topic_key": str(topic.get("topic_key", f"topic-{index}")).strip() or f"topic-{index}",
+                "name": name,
+                "normalized_name": normalized_name,
+                "description": _sanitize_description(str(topic.get("description", "")).strip()),
+                "keywords": keywords or [word for word in normalized_name.split()[:3]],
+                "importance": _clamp_score(topic.get("importance"), default=3),
+                "difficulty": _clamp_score(topic.get("difficulty"), default=3),
+                "source_chunk_ids": source_chunk_ids,
+                "prerequisites": prerequisites,
+            }
+        )
+    merged = _merge_topic_lists([], normalized)
+    return merged[:12]
+
+
+def _sanitize_description(value: str) -> str:
+    cleaned = " ".join(value.split())
+    return cleaned[:260]
+
+
+def _clamp_score(value, *, default: int) -> int:
+    try:
+        number = int(value)
+    except (TypeError, ValueError):
+        number = default
+    return max(1, min(5, number))
+
+
+def _parse_json_object(raw: str) -> dict:
+    raw = raw.strip()
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        start = raw.find("{")
+        end = raw.rfind("}")
+        if start == -1 or end == -1 or end <= start:
+            raise ChatProviderError("Topic extractor did not return JSON")
+        try:
+            return json.loads(raw[start : end + 1])
+        except json.JSONDecodeError as exc:
+            raise ChatProviderError("Topic extractor returned invalid JSON") from exc
+
+
+def _should_use_llm_for_topics() -> bool:
+    mode = TOPIC_EXTRACTION_MODE.lower()
+    if mode == "rule":
+        return False
+    if mode == "llm":
+        return bool(CHAT_API_KEY)
+    return bool(CHAT_API_KEY)

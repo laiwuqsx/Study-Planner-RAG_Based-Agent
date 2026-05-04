@@ -54,6 +54,7 @@ Retrieval-augmented study planner agent for students.
 - Topic deduplication by normalized name
 - Topic source chunk references and keywords
 - Topics page in the frontend
+- Optional LLM-assisted topic merging across uploaded documents
 
 ### Phase 6: RAG Chat
 
@@ -211,6 +212,17 @@ EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase5.py
 ```
 
 The script uploads a sample DOCX, waits for topic extraction to finish, and verifies that topics are deduplicated, have keywords, and retain source chunk references.
+
+To enable LLM-assisted topic extraction, set:
+
+```env
+TOPIC_EXTRACTION_MODE=auto
+CHAT_BASE_URL=https://api.deepseek.com/v1
+CHAT_MODEL=deepseek-chat
+CHAT_API_KEY=<your-api-key>
+```
+
+In `auto` mode, the backend keeps a course topic set in PostgreSQL, passes the current topic catalog plus the newly processed document candidates to the LLM, and asks it to merge the new material into existing high-level study topics or create a new topic only when needed. If no API key is present, the backend falls back to the local rule-based extractor.
 
 Run the Phase 6 smoke test after backend is running:
 

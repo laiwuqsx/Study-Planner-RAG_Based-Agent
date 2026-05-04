@@ -24,10 +24,13 @@ def generate_grounded_answer(*, question: str, results: list[dict]) -> str:
         raise ChatProviderError("LLM chat provider is not configured")
 
     system_prompt = (
-        "You answer only from the provided course sources. "
-        "Give a concise study-oriented explanation. "
-        "Cite claims with source numbers like [1] or [2]. "
-        "If the sources do not support an answer, say that directly."
+        "You are a study assistant answering questions about one course. "
+        "Use the retrieved course sources as the primary basis for your answer. "
+        "You may lightly synthesize, rephrase, and connect ideas across the sources when that helps clarity. "
+        "Do not invent concrete facts, requirements, APIs, definitions, dates, or code details that are not supported by the retrieved material. "
+        "If the sources are incomplete, say what is supported by the sources and clearly note what is uncertain. "
+        "Cite source-supported claims with source numbers like [1] or [2]. "
+        "Keep the answer concise, useful, and study-oriented."
     )
     source_lines = []
     for index, item in enumerate(results, start=1):
@@ -42,18 +45,44 @@ def generate_grounded_answer(*, question: str, results: list[dict]) -> str:
             "Sources:",
             *source_lines,
             "",
-            "Answer using the sources only.",
+            "Answer using the sources as your main evidence. You may make light, clearly bounded inferences when the sources strongly suggest them, but do not add unsupported concrete details.",
         ]
     )
 
-    payload = {
-        "model": CHAT_MODEL,
-        "messages": [
+    data = _post_chat_completion(
+        messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        "temperature": 0.2,
-        "max_tokens": CHAT_MAX_OUTPUT_TOKENS,
+        temperature=0.2,
+        max_tokens=CHAT_MAX_OUTPUT_TOKENS,
+    )
+    try:
+        return data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ChatProviderError("Chat provider returned an unexpected response shape") from exc
+
+
+def run_chat_completion(*, messages: list[dict], temperature: float = 0.2, max_tokens: int | None = None) -> str:
+    if not should_use_llm():
+        raise ChatProviderError("LLM chat provider is not configured")
+    data = _post_chat_completion(
+        messages=messages,
+        temperature=temperature,
+        max_tokens=max_tokens or CHAT_MAX_OUTPUT_TOKENS,
+    )
+    try:
+        return data["choices"][0]["message"]["content"].strip()
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ChatProviderError("Chat provider returned an unexpected response shape") from exc
+
+
+def _post_chat_completion(*, messages: list[dict], temperature: float, max_tokens: int) -> dict:
+    payload = {
+        "model": CHAT_MODEL,
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens,
     }
     request = urllib.request.Request(
         f"{CHAT_BASE_URL.rstrip('/')}/chat/completions",
@@ -66,14 +95,9 @@ def generate_grounded_answer(*, question: str, results: list[dict]) -> str:
     )
     try:
         with urllib.request.urlopen(request, timeout=60) as response:
-            data = json.load(response)
+            return json.load(response)
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="ignore")
         raise ChatProviderError(detail or f"Chat provider HTTP {exc.code}") from exc
     except urllib.error.URLError as exc:
         raise ChatProviderError(str(exc.reason)) from exc
-
-    try:
-        return data["choices"][0]["message"]["content"].strip()
-    except (KeyError, IndexError, TypeError) as exc:
-        raise ChatProviderError("Chat provider returned an unexpected response shape") from exc
