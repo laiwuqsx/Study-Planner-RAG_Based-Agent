@@ -7,9 +7,9 @@ UPLOAD_STEPS = [
     ("upload", "File uploaded"),
     ("parse", "Extracting document text"),
     ("chunk", "Building hierarchical chunks"),
-    ("index", "Retrieval indexing not implemented yet"),
-    ("topic_extract", "Topic extraction not implemented yet"),
-    ("complete", "Document ready for retrieval indexing"),
+    ("index", "Indexing chunks for retrieval"),
+    ("topic_extract", "Extracting course topics"),
+    ("complete", "Document ready for retrieval and topic review"),
 ]
 
 

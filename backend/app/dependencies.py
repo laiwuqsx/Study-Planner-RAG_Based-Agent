@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from backend.app.auth import get_current_user, get_db
-from backend.app.models import Course, Document, ProcessingJob, User
+from backend.app.models import ChatSession, Course, Document, ProcessingJob, Topic, User
 
 
 def get_user_course_or_404(
@@ -36,3 +36,25 @@ def get_user_document_or_404(
     if not document:
         raise HTTPException(status_code=404, detail="Document not found")
     return document
+
+
+def get_user_topic_or_404(
+    topic_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> Topic:
+    topic = db.query(Topic).filter(Topic.id == topic_id, Topic.user_id == current_user.id).first()
+    if not topic:
+        raise HTTPException(status_code=404, detail="Topic not found")
+    return topic
+
+
+def get_user_session_or_404(
+    session_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> ChatSession:
+    session = db.query(ChatSession).filter(ChatSession.id == session_id, ChatSession.user_id == current_user.id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return session

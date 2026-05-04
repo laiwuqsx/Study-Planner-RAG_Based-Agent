@@ -47,6 +47,23 @@ Retrieval-augmented study planner agent for students.
 - Course-scoped search API
 - Search page in the frontend
 
+### Phase 5: Topic Extraction
+
+- Topic persistence in PostgreSQL
+- Course-level topic refresh pipeline
+- Topic deduplication by normalized name
+- Topic source chunk references and keywords
+- Topics page in the frontend
+
+### Phase 6: RAG Chat
+
+- Course chat sessions in PostgreSQL
+- Synchronous chat endpoint
+- Streaming chat endpoint
+- Retrieved source trace on assistant messages
+- Chat page in the frontend
+- Optional OpenAI-compatible grounded answer generation with extractive fallback
+
 ## Prerequisites
 
 Install the local development tools:
@@ -186,6 +203,33 @@ EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase4_vector.py
 ```
 
 The script uploads a sample DOCX, waits for indexing to finish, and verifies that vector and hybrid retrieval return course-scoped results through Milvus. Keep `EMBEDDING_PROVIDER=voyage` in your real `.env`; the `hash` override is only for deterministic local verification without hitting the remote embedding API.
+
+Run the Phase 5 smoke test after backend is running:
+
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase5.py
+```
+
+The script uploads a sample DOCX, waits for topic extraction to finish, and verifies that topics are deduplicated, have keywords, and retain source chunk references.
+
+Run the Phase 6 smoke test after backend is running:
+
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase6.py
+```
+
+The script uploads a sample DOCX, waits for indexing, sends a course question to the chat endpoint, and verifies that the saved session contains a sourced assistant answer.
+
+To enable LLM-grounded chat generation, set these in `.env`:
+
+```env
+CHAT_PROVIDER=auto
+CHAT_MODEL=gpt-4.1-mini
+CHAT_BASE_URL=https://api.openai.com/v1
+CHAT_API_KEY=<your-api-key>
+```
+
+If `CHAT_API_KEY` is unset, the backend falls back to the local extractive chat baseline so the app still works without an LLM provider.
 
 ## Frontend Commands
 

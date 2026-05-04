@@ -153,3 +153,88 @@ class SearchResponse(BaseModel):
     query: str
     retrieval_mode: str
     results: list[SearchResultResponse]
+
+
+class TopicResponse(BaseModel):
+    id: int
+    course_id: int
+    name: str
+    description: str
+    keywords: list[str]
+    importance: int
+    difficulty: int
+    source_chunk_ids: list[str]
+    prerequisites: list[str]
+    created_at: datetime
+    updated_at: datetime
+
+
+class TopicListResponse(BaseModel):
+    topics: list[TopicResponse]
+
+
+class TopicRefreshResponse(BaseModel):
+    topic_count: int
+    topics: list[TopicResponse]
+
+
+class TopicUpdateRequest(BaseModel):
+    name: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    description: Optional[str] = None
+    keywords: Optional[list[str]] = None
+    importance: Optional[int] = Field(default=None, ge=1, le=5)
+    difficulty: Optional[int] = Field(default=None, ge=1, le=5)
+    prerequisites: Optional[list[str]] = None
+
+
+class ChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=2000)
+    session_id: Optional[int] = None
+    retrieval_mode: str = Field(default="hybrid", pattern="^(keyword|vector|hybrid)$")
+    top_k: int = Field(default=5, ge=1, le=10)
+
+
+class ChatSourceResponse(BaseModel):
+    chunk_id: str
+    document_id: int
+    filename: str
+    page_number: int | None
+    section_title: str
+    text: str
+    score: float
+
+
+class ChatMessageResponse(BaseModel):
+    id: int
+    role: str
+    content: str
+    retrieval_mode: str
+    sources: list[ChatSourceResponse]
+    created_at: datetime
+
+
+class ChatSessionSummaryResponse(BaseModel):
+    id: int
+    course_id: int
+    title: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class ChatSessionListResponse(BaseModel):
+    sessions: list[ChatSessionSummaryResponse]
+
+
+class ChatSessionDetailResponse(BaseModel):
+    id: int
+    course_id: int
+    title: str
+    messages: list[ChatMessageResponse]
+    created_at: datetime
+    updated_at: datetime
+
+
+class ChatResponse(BaseModel):
+    session: ChatSessionSummaryResponse
+    user_message: ChatMessageResponse
+    assistant_message: ChatMessageResponse

@@ -1,13 +1,19 @@
 import React, { FormEvent, useEffect, useMemo, useState } from 'react';
 
 import { AuthView } from './components/AuthView';
+import { ChatView } from './components/ChatView';
 import { DocumentChunksView } from './components/DocumentChunksView';
 import { SearchView } from './components/SearchView';
+import { TopicsView } from './components/TopicsView';
 import { WorkspaceView } from './components/WorkspaceView';
 import { API_BASE_URL, TOKEN_KEY } from './constants';
 import { navigateToWorkspace, getCurrentRoute, type AppRoute } from './router';
 import {
   AuthMode,
+  ChatMessage,
+  ChatResponse,
+  ChatSessionDetail,
+  ChatSessionSummary,
   Course,
   CourseForm,
   DocumentChunkSummary,
@@ -15,6 +21,7 @@ import {
   ProcessingJob,
   SearchResponse,
   SearchResult,
+  Topic,
   UploadResponse,
   User,
 } from './types';
@@ -40,6 +47,13 @@ export default function App() {
   const [retrievalMode, setRetrievalMode] = useState('keyword');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [topicsLoading, setTopicsLoading] = useState(false);
+  const [chatSessions, setChatSessions] = useState<ChatSessionSummary[]>([]);
+  const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatQuery, setChatQuery] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -80,7 +94,7 @@ export default function App() {
     const payload = await apiFetch<{ courses: Course[] }>('/courses');
     setCourses(payload.courses);
     setSelectedCourseId((current) => {
-      if (route.name === 'document-chunks' || route.name === 'search') return route.params.courseId;
+      if (route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat') return route.params.courseId;
       if (current && payload.courses.some((course) => course.id === current)) return current;
       return payload.courses[0]?.id ?? null;
     });
@@ -110,6 +124,47 @@ export default function App() {
     }
   }
 
+  async function loadTopics(courseId: number) {
+    setTopicsLoading(true);
+    try {
+      const payload = await apiFetch<{ topics: Topic[] }>(`/courses/${courseId}/topics`);
+      setTopics(payload.topics);
+    } catch (error) {
+      setTopics([]);
+      setMessage(error instanceof Error ? error.message : 'Topic load failed');
+    } finally {
+      setTopicsLoading(false);
+    }
+  }
+
+  async function refreshTopics(courseId: number) {
+    setTopicsLoading(true);
+    setMessage('');
+    try {
+      const payload = await apiFetch<{ topics: Topic[]; topic_count: number }>(`/courses/${courseId}/topics/refresh`, {
+        method: 'POST',
+      });
+      setTopics(payload.topics);
+      await loadDocuments(courseId);
+      setMessage(`Refreshed ${payload.topic_count} topics.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Topic refresh failed');
+    } finally {
+      setTopicsLoading(false);
+    }
+  }
+
+  async function loadChatSessions(courseId: number) {
+    const payload = await apiFetch<{ sessions: ChatSessionSummary[] }>(`/courses/${courseId}/sessions`);
+    setChatSessions(payload.sessions);
+  }
+
+  async function loadChatSession(sessionId: number) {
+    const payload = await apiFetch<ChatSessionDetail>(`/sessions/${sessionId}`);
+    setActiveSessionId(payload.id);
+    setChatMessages(payload.messages);
+  }
+
   useEffect(() => {
     const onPopState = () => setRoute(getCurrentRoute());
     window.addEventListener('popstate', onPopState);
@@ -129,13 +184,21 @@ export default function App() {
       setDocuments([]);
       setChunkSummary(null);
       setSearchResults([]);
+      setTopics([]);
+      setChatSessions([]);
+      setChatMessages([]);
       return;
     }
-    const courseId = route.name === 'document-chunks' || route.name === 'search' ? route.params.courseId : selectedCourseId;
+    const courseId = route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat'
+      ? route.params.courseId
+      : selectedCourseId;
     if (!courseId) {
       setDocuments([]);
       setChunkSummary(null);
       setSearchResults([]);
+      setTopics([]);
+      setChatSessions([]);
+      setChatMessages([]);
       return;
     }
     setSelectedCourseId(courseId);
@@ -158,14 +221,40 @@ export default function App() {
   }, [route]);
 
   useEffect(() => {
+    if (route.name !== 'topics' || !isAuthenticated) {
+      setTopics([]);
+      return;
+    }
+    loadTopics(route.params.courseId).catch((error) => setMessage(error.message));
+  }, [route, isAuthenticated]);
+
+  useEffect(() => {
+    if (route.name !== 'chat' || !isAuthenticated) {
+      setChatSessions([]);
+      setChatMessages([]);
+      setActiveSessionId(null);
+      return;
+    }
+    loadChatSessions(route.params.courseId).catch((error) => setMessage(error.message));
+  }, [route, isAuthenticated]);
+
+  useEffect(() => {
     if (!activeJob || activeJob.status === 'completed' || activeJob.status === 'failed') return;
     const timer = window.setInterval(async () => {
       try {
         const nextJob = await loadJob(activeJob.id);
         const courseId =
-          route.name === 'document-chunks' || route.name === 'search' ? route.params.courseId : selectedCourseId;
+          route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat'
+            ? route.params.courseId
+            : selectedCourseId;
         if (courseId && nextJob.course_id === courseId) {
           await loadDocuments(courseId);
+          if (route.name === 'topics') {
+            await loadTopics(courseId);
+          }
+          if (route.name === 'chat') {
+            await loadChatSessions(courseId);
+          }
         }
       } catch (error) {
         setMessage(error instanceof Error ? error.message : 'Job refresh failed');
@@ -205,6 +294,10 @@ export default function App() {
     setEditingId(null);
     setActiveJob(null);
     setChunkSummary(null);
+    setTopics([]);
+    setChatSessions([]);
+    setChatMessages([]);
+    setActiveSessionId(null);
     setSelectedFile(null);
     setCourseForm({ name: '', term: '', description: '' });
     navigateToWorkspace();
@@ -281,6 +374,10 @@ export default function App() {
         setActiveJob(null);
         setChunkSummary(null);
         setSearchResults([]);
+        setTopics([]);
+        setChatSessions([]);
+        setChatMessages([]);
+        setActiveSessionId(null);
         navigateToWorkspace();
       }
       await loadCourses();
@@ -305,6 +402,9 @@ export default function App() {
         navigateToWorkspace();
       }
       await loadDocuments(courseId);
+      if (route.name === 'topics') {
+        await loadTopics(courseId);
+      }
       setMessage('Material deleted.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Delete failed');
@@ -335,11 +435,63 @@ export default function App() {
       const fileInput = document.getElementById('course-upload-input') as HTMLInputElement | null;
       if (fileInput) fileInput.value = '';
       await loadDocuments(courseId);
+      if (route.name === 'topics') {
+        await loadTopics(courseId);
+      }
       setMessage('Upload started.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Upload failed');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleChatSubmit(event: FormEvent) {
+    event.preventDefault();
+    const courseId = route.name === 'chat' ? route.params.courseId : selectedCourseId;
+    if (!courseId || !chatQuery.trim()) return;
+    setChatLoading(true);
+    setMessage('');
+    try {
+      const payload = await apiFetch<ChatResponse>(`/courses/${courseId}/chat`, {
+        method: 'POST',
+        body: JSON.stringify({
+          message: chatQuery.trim(),
+          session_id: activeSessionId,
+          retrieval_mode: retrievalMode,
+          top_k: 5,
+        }),
+      });
+      setActiveSessionId(payload.session.id);
+      setChatMessages((current) =>
+        current.length > 0 && activeSessionId === payload.session.id
+          ? [...current, payload.user_message, payload.assistant_message]
+          : [payload.user_message, payload.assistant_message],
+      );
+      setChatQuery('');
+      await loadChatSessions(courseId);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Chat failed');
+    } finally {
+      setChatLoading(false);
+    }
+  }
+
+  async function handleDeleteSession(sessionId: number) {
+    if (!window.confirm('Delete this chat session?')) return;
+    setMessage('');
+    try {
+      await apiFetch(`/sessions/${sessionId}`, { method: 'DELETE' });
+      if (activeSessionId === sessionId) {
+        setActiveSessionId(null);
+        setChatMessages([]);
+      }
+      const courseId = route.name === 'chat' ? route.params.courseId : selectedCourseId;
+      if (courseId) {
+        await loadChatSessions(courseId);
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Session delete failed');
     }
   }
 
@@ -381,6 +533,32 @@ export default function App() {
           onQueryChange={setSearchQuery}
           onRetrievalModeChange={setRetrievalMode}
           onSubmit={handleSearchSubmit}
+        />
+      ) : route.name === 'topics' ? (
+        <TopicsView
+          course={selectedCourse}
+          topics={topics}
+          loading={topicsLoading}
+          onRefresh={() => route.name === 'topics' && refreshTopics(route.params.courseId)}
+        />
+      ) : route.name === 'chat' ? (
+        <ChatView
+          course={selectedCourse}
+          sessions={chatSessions}
+          activeSessionId={activeSessionId}
+          messages={chatMessages}
+          query={chatQuery}
+          retrievalMode={retrievalMode}
+          loading={chatLoading}
+          onNewSession={() => {
+            setActiveSessionId(null);
+            setChatMessages([]);
+          }}
+          onSelectSession={(sessionId) => loadChatSession(sessionId).catch((error) => setMessage(error.message))}
+          onDeleteSession={handleDeleteSession}
+          onQueryChange={setChatQuery}
+          onRetrievalModeChange={setRetrievalMode}
+          onSubmit={handleChatSubmit}
         />
       ) : route.name === 'document-chunks' ? (
         <DocumentChunksView

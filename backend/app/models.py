@@ -43,6 +43,8 @@ class Course(Base):
     user = relationship("User", back_populates="courses")
     documents = relationship("Document", back_populates="course", cascade="all, delete-orphan")
     processing_jobs = relationship("ProcessingJob", back_populates="course", cascade="all, delete-orphan")
+    topics = relationship("Topic", back_populates="course", cascade="all, delete-orphan")
+    chat_sessions = relationship("ChatSession", back_populates="course", cascade="all, delete-orphan")
 
 
 class Document(Base):
@@ -70,6 +72,69 @@ class Document(Base):
     processing_jobs = relationship("ProcessingJob", back_populates="document", cascade="all, delete-orphan")
     parent_chunks = relationship("ParentChunk", back_populates="document", cascade="all, delete-orphan")
     child_chunks = relationship("ChildChunk", back_populates="document", cascade="all, delete-orphan")
+
+
+class Topic(Base):
+    __tablename__ = "topics"
+    __table_args__ = (UniqueConstraint("course_id", "normalized_name", name="uq_course_topic_normalized_name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    normalized_name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    keywords_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    importance: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    difficulty: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    source_chunk_ids_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    prerequisites_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    course = relationship("Course", back_populates="topics")
+
+
+class ChatSession(Base):
+    __tablename__ = "chat_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(200), default="New conversation", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    course = relationship("Course", back_populates="chat_sessions")
+    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
+
+
+class ChatMessage(Base):
+    __tablename__ = "chat_messages"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    session_id: Mapped[int] = mapped_column(
+        ForeignKey("chat_sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    role: Mapped[str] = mapped_column(String(20), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    retrieval_mode: Mapped[str] = mapped_column(String(20), default="hybrid", nullable=False)
+    sources_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    session = relationship("ChatSession", back_populates="messages")
 
 
 class ProcessingJob(Base):

@@ -110,3 +110,59 @@ export type SearchResponse = {
   retrieval_mode: string;
   results: SearchResult[];
 };
+
+export type Topic = {
+  id: number;
+  course_id: number;
+  name: string;
+  description: string;
+  keywords: string[];
+  importance: number;
+  difficulty: number;
+  source_chunk_ids: string[];
+  prerequisites: string[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatSource = {
+  chunk_id: string;
+  document_id: number;
+  filename: string;
+  page_number: number | null;
+  section_title: string;
+  text: string;
+  score: number;
+};
+
+export type ChatMessage = {
+  id: number;
+  role: string;
+  content: string;
+  retrieval_mode: string;
+  sources: ChatSource[];
+  created_at: string;
+};
+
+export type ChatSessionSummary = {
+  id: number;
+  course_id: number;
+  title: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatSessionDetail = {
+  id: number;
+  course_id: number;
+  title: string;
+  messages: ChatMessage[];
+  created_at: string;
+  updated_at: string;
+};
+
+export type ChatResponse = {
+  session: ChatSessionSummary;
+  user_message: ChatMessage;
+  assistant_message: ChatMessage;
+};

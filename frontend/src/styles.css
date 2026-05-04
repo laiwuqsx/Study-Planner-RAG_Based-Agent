@@ -178,7 +178,7 @@ h3 {
 .search-form {
   display: grid;
   gap: 12px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 160px auto;
 }
 
 .section-heading {
@@ -297,7 +297,76 @@ h3 {
 }
 
 .result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-top: 12px;
+}
+
+.topic-list {
+  display: grid;
+  gap: 12px;
+}
+
+.topic-card {
+  border: 1px solid #e4e8f1;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.topic-heading {
+  margin-bottom: 8px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.tag-chip {
+  background: #eef2ff;
+  border-radius: 999px;
+  color: #3952a3;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+}
+
+.chat-thread,
+.source-list {
+  display: grid;
+  gap: 12px;
+}
+
+.chat-message {
+  border: 1px solid #e4e8f1;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+
+.chat-user {
+  background: #f8fbff;
+}
+
+.chat-assistant {
+  background: #ffffff;
+}
+
+.source-card {
+  border: 1px solid #e4e8f1;
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.source-card pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .chunk-meta {
