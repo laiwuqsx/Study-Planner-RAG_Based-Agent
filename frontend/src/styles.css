@@ -1,6 +1,6 @@
 :root {
-  color: #1d2433;
-  background: #f6f7fb;
+  color: #152033;
+  background: #eef3fb;
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.5;
 }
@@ -11,6 +11,9 @@
 
 body {
   margin: 0;
+  background:
+    radial-gradient(circle at top, rgba(36, 107, 254, 0.08), transparent 28%),
+    linear-gradient(180deg, #f5f8fd 0%, #eef3fb 100%);
 }
 
 button,
@@ -24,10 +27,17 @@ button {
   border: 0;
   border-radius: 7px;
   background: #246bfe;
+  box-shadow: 0 8px 18px rgba(36, 107, 254, 0.18);
   color: white;
   cursor: pointer;
   font-weight: 700;
   padding: 10px 14px;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+button:hover:not(:disabled) {
+  box-shadow: 0 10px 22px rgba(36, 107, 254, 0.22);
+  transform: translateY(-1px);
 }
 
 button:disabled {
@@ -43,7 +53,16 @@ select {
   color: #1d2433;
   background: #fff;
   padding: 10px 12px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
   width: 100%;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #8bb0ff;
+  box-shadow: 0 0 0 4px rgba(36, 107, 254, 0.12);
+  outline: 0;
 }
 
 textarea {
@@ -60,16 +79,21 @@ label {
 
 .app-shell {
   margin: 0 auto;
-  max-width: 1120px;
-  padding: 32px 20px;
+  max-width: 1180px;
+  padding: 40px 24px 48px;
 }
 
 .topbar {
   align-items: center;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(224, 231, 245, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.07);
   display: flex;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 22px;
+  margin-bottom: 24px;
+  padding: 18px 20px;
 }
 
 .eyebrow {
@@ -117,13 +141,14 @@ h3 {
 
 .user-panel button,
 .link-button {
-  background: #e9edf7;
+  background: #eef3ff;
+  box-shadow: none;
   color: #263146;
 }
 
 .notice {
-  background: #fff8df;
-  border: 1px solid #f0d783;
+  background: rgba(255, 248, 223, 0.92);
+  border: 1px solid #efd374;
   border-radius: 8px;
   color: #6b5215;
   margin-bottom: 18px;
@@ -163,11 +188,12 @@ h3 {
 }
 
 .panel {
-  background: #ffffff;
-  border: 1px solid #e1e5ef;
-  border-radius: 8px;
-  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.06);
-  padding: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid #dfe7f5;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  padding: 22px;
 }
 
 .form-stack {
@@ -199,17 +225,29 @@ h3 {
 }
 
 .course-card {
+  background: #fdfefe;
   border: 1px solid #e4e8f1;
   border-radius: 8px;
   display: flex;
   justify-content: space-between;
   gap: 16px;
   padding: 16px;
+  transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+}
+
+.course-card:hover,
+.document-card:hover,
+.topic-card:hover,
+.chat-message:hover,
+.source-card:hover {
+  border-color: #c7d6f4;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.05);
+  transform: translateY(-1px);
 }
 
 .course-card.is-selected {
   border-color: #246bfe;
-  box-shadow: 0 0 0 1px rgba(36, 107, 254, 0.15);
+  box-shadow: 0 0 0 1px rgba(36, 107, 254, 0.15), 0 14px 28px rgba(36, 107, 254, 0.12);
 }
 
 .course-select {
@@ -255,6 +293,7 @@ h3 {
 .document-card,
 .step-row {
   align-items: center;
+  background: #fdfefe;
   border: 1px solid #e4e8f1;
   border-radius: 8px;
   display: flex;
@@ -309,6 +348,7 @@ h3 {
 }
 
 .topic-card {
+  background: #fdfefe;
   border: 1px solid #e4e8f1;
   border-radius: 8px;
   padding: 16px;
@@ -340,6 +380,11 @@ h3 {
   gap: 12px;
 }
 
+.chat-turn {
+  display: grid;
+  gap: 10px;
+}
+
 .chat-message {
   border: 1px solid #e4e8f1;
   border-radius: 8px;
@@ -347,14 +392,15 @@ h3 {
 }
 
 .chat-user {
-  background: #f8fbff;
+  background: linear-gradient(180deg, #f4f8ff 0%, #eef5ff 100%);
 }
 
 .chat-assistant {
-  background: #ffffff;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
 }
 
 .source-card {
+  background: #fbfcfe;
   border: 1px solid #e4e8f1;
   border-radius: 8px;
   padding: 12px 14px;

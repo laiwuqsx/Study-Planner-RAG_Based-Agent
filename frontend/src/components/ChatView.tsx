@@ -34,6 +34,14 @@ export function ChatView({
   onRetrievalModeChange,
   onSubmit,
 }: ChatViewProps) {
+  const turns = [];
+  for (let index = 0; index < messages.length; index += 1) {
+    const message = messages[index];
+    if (message.role !== 'user') continue;
+    const assistant = messages[index + 1]?.role === 'assistant' ? messages[index + 1] : null;
+    turns.push({ user: message, assistant });
+  }
+
   return (
     <section className="workspace-grid">
       <aside className="stack-column">
@@ -77,6 +85,12 @@ export function ChatView({
 
       <section className="stack-column">
         <section className="panel">
+          <div className="section-heading">
+            <div>
+              <h2>Ask course material</h2>
+              <p className="section-copy">Latest question stays on top. Answers cite retrieved sources from this course only.</p>
+            </div>
+          </div>
           <form className="form-stack" onSubmit={onSubmit}>
             <div className="search-form">
               <input
@@ -100,27 +114,35 @@ export function ChatView({
           <div className="section-heading">
             <h2>Conversation</h2>
           </div>
-          {messages.length === 0 ? (
+          {turns.length === 0 ? (
             <p className="empty-state">Ask a question to retrieve relevant course chunks and generate a sourced answer.</p>
           ) : (
             <div className="chat-thread">
-              {messages.map((message) => (
-                <article className={`chat-message chat-${message.role}`} key={message.id}>
-                  <p className="chunk-meta">{message.role}</p>
-                  <p>{message.content}</p>
-                  {message.role === 'assistant' && message.sources.length > 0 && (
-                    <div className="source-list">
-                      {message.sources.map((source, index) => (
-                        <div className="source-card" key={`${message.id}-${source.chunk_id}`}>
-                          <p className="document-meta">
-                            [{index + 1}] {source.filename}
-                            {source.page_number ? ` · page ${source.page_number}` : ''}
-                            {source.section_title ? ` · ${source.section_title}` : ''}
-                          </p>
-                          <pre>{source.text}</pre>
+              {[...turns].reverse().map((turn) => (
+                <article className="chat-turn" key={turn.user.id}>
+                  <section className="chat-message chat-user">
+                    <p className="chunk-meta">Question</p>
+                    <p>{turn.user.content}</p>
+                  </section>
+                  {turn.assistant && (
+                    <section className="chat-message chat-assistant">
+                      <p className="chunk-meta">Answer</p>
+                      <p>{turn.assistant.content}</p>
+                      {turn.assistant.sources.length > 0 && (
+                        <div className="source-list">
+                          {turn.assistant.sources.map((source, index) => (
+                            <div className="source-card" key={`${turn.assistant?.id}-${source.chunk_id}`}>
+                              <p className="document-meta">
+                                [{index + 1}] {source.filename}
+                                {source.page_number ? ` · page ${source.page_number}` : ''}
+                                {source.section_title ? ` · ${source.section_title}` : ''}
+                              </p>
+                              <pre>{source.text}</pre>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      )}
+                    </section>
                   )}
                 </article>
               ))}
