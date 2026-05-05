@@ -4,6 +4,7 @@ export type AppRoute =
   | { name: 'workspace' }
   | { name: 'search'; params: { courseId: number } }
   | { name: 'topics'; params: { courseId: number } }
+  | { name: 'study-plan'; params: { courseId: number } }
   | { name: 'chat'; params: { courseId: number } }
   | { name: 'document-chunks'; params: ChunkRoute };
 
@@ -21,6 +22,13 @@ export function getCurrentRoute(): AppRoute {
     return {
       name: 'topics',
       params: { courseId: Number(topicsMatch[1]) },
+    };
+  }
+  const studyPlanMatch = path.match(/^\/courses\/(\d+)\/study-plan$/);
+  if (studyPlanMatch) {
+    return {
+      name: 'study-plan',
+      params: { courseId: Number(studyPlanMatch[1]) },
     };
   }
   const chatMatch = path.match(/^\/courses\/(\d+)\/chat$/);
@@ -60,6 +68,11 @@ export function navigateToTopics(courseId: number) {
 
 export function navigateToChat(courseId: number) {
   window.history.pushState({}, '', `/courses/${courseId}/chat`);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
+export function navigateToStudyPlan(courseId: number) {
+  window.history.pushState({}, '', `/courses/${courseId}/study-plan`);
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 

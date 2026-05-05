@@ -1,7 +1,7 @@
 import { FormEvent } from 'react';
 
 import { MATERIAL_TYPE_OPTIONS } from '../constants';
-import { navigateToChat, navigateToDocumentChunks, navigateToSearch, navigateToTopics } from '../router';
+import { navigateToChat, navigateToDocumentChunks, navigateToSearch, navigateToStudyPlan, navigateToTopics } from '../router';
 import { Course, CourseForm, DocumentRecord, ProcessingJob } from '../types';
 import { formatDate } from '../utils';
 
@@ -141,6 +141,9 @@ export function WorkspaceView({
               <div className="result-actions">
                 <button type="button" className="link-button" onClick={() => navigateToChat(selectedCourse.id)}>
                   Ask course
+                </button>
+                <button type="button" className="link-button" onClick={() => navigateToStudyPlan(selectedCourse.id)}>
+                  Study plan
                 </button>
                 <button type="button" className="link-button" onClick={() => navigateToTopics(selectedCourse.id)}>
                   View topics
