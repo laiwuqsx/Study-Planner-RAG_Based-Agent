@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from backend.app.auth import get_current_user, get_db
 from backend.app.dependencies import get_user_course_or_404, get_user_topic_or_404
 from backend.app.models import Course, Topic, User
-from backend.app.schemas import TopicListResponse, TopicRefreshResponse, TopicResponse, TopicUpdateRequest
-from backend.app.services.topics import get_course_topic, list_course_topics, refresh_course_topics, serialize_topic, update_topic
+from backend.app.schemas import TopicCurateResponse, TopicListResponse, TopicRefreshResponse, TopicResponse, TopicUpdateRequest
+from backend.app.services.topics import curate_course_topics, get_course_topic, list_course_topics, refresh_course_topics, serialize_topic, update_topic
 
 router = APIRouter(prefix="/courses/{course_id}/topics", tags=["topics"])
 
@@ -28,6 +28,19 @@ async def refresh_topics(
     topics = refresh_course_topics(db, course=course)
     return TopicRefreshResponse(
         topic_count=len(topics),
+        topics=[TopicResponse(**serialize_topic(topic)) for topic in topics],
+    )
+
+
+@router.post("/curate", response_model=TopicCurateResponse)
+async def curate_topics(
+    course: Course = Depends(get_user_course_or_404),
+    db: Session = Depends(get_db),
+):
+    topics, updated_count = curate_course_topics(db, course=course)
+    return TopicCurateResponse(
+        topic_count=len(topics),
+        updated_topic_count=updated_count,
         topics=[TopicResponse(**serialize_topic(topic)) for topic in topics],
     )
 
@@ -64,6 +77,9 @@ async def patch_topic(
         keywords=request.keywords,
         importance=request.importance,
         difficulty=request.difficulty,
+        status=request.status,
+        quality_score=request.quality_score,
+        review_note=request.review_note,
         prerequisites=request.prerequisites,
     )
     return TopicResponse(**serialize_topic(updated))

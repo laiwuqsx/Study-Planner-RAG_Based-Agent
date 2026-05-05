@@ -4,6 +4,7 @@ import { AuthView } from './components/AuthView';
 import { ChatView } from './components/ChatView';
 import { DocumentChunksView } from './components/DocumentChunksView';
 import { SearchView } from './components/SearchView';
+import { StudyPlanView } from './components/StudyPlanView';
 import { TopicsView } from './components/TopicsView';
 import { WorkspaceView } from './components/WorkspaceView';
 import { API_BASE_URL, TOKEN_KEY } from './constants';
@@ -21,6 +22,8 @@ import {
   ProcessingJob,
   SearchResponse,
   SearchResult,
+  StudyPlan,
+  StudyPlanGenerateInput,
   Topic,
   UploadResponse,
   User,
@@ -49,6 +52,14 @@ export default function App() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
+  const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(null);
+  const [studyPlanLoading, setStudyPlanLoading] = useState(false);
+  const [studyPlanForm, setStudyPlanForm] = useState<StudyPlanGenerateInput>({
+    goal: 'Build a focused review plan for this course.',
+    sessions_per_week: 4,
+    minutes_per_session: 90,
+    topic_limit: 10,
+  });
   const [chatSessions, setChatSessions] = useState<ChatSessionSummary[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -94,7 +105,7 @@ export default function App() {
     const payload = await apiFetch<{ courses: Course[] }>('/courses');
     setCourses(payload.courses);
     setSelectedCourseId((current) => {
-      if (route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat') return route.params.courseId;
+      if (route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat' || route.name === 'study-plan') return route.params.courseId;
       if (current && payload.courses.some((course) => course.id === current)) return current;
       return payload.courses[0]?.id ?? null;
     });
@@ -134,6 +145,22 @@ export default function App() {
       setMessage(error instanceof Error ? error.message : 'Topic load failed');
     } finally {
       setTopicsLoading(false);
+    }
+  }
+
+  async function loadStudyPlan(courseId: number) {
+    setStudyPlanLoading(true);
+    try {
+      const payload = await apiFetch<StudyPlan>(`/courses/${courseId}/study-plan`);
+      setStudyPlan(payload);
+    } catch (error) {
+      setStudyPlan(null);
+      const detail = error instanceof Error ? error.message : 'Study plan load failed';
+      if (detail !== 'Study plan not found') {
+        setMessage(detail);
+      }
+    } finally {
+      setStudyPlanLoading(false);
     }
   }
 
@@ -185,11 +212,12 @@ export default function App() {
       setChunkSummary(null);
       setSearchResults([]);
       setTopics([]);
+      setStudyPlan(null);
       setChatSessions([]);
       setChatMessages([]);
       return;
     }
-    const courseId = route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat'
+    const courseId = route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat' || route.name === 'study-plan'
       ? route.params.courseId
       : selectedCourseId;
     if (!courseId) {
@@ -197,6 +225,7 @@ export default function App() {
       setChunkSummary(null);
       setSearchResults([]);
       setTopics([]);
+      setStudyPlan(null);
       setChatSessions([]);
       setChatMessages([]);
       return;
@@ -229,6 +258,14 @@ export default function App() {
   }, [route, isAuthenticated]);
 
   useEffect(() => {
+    if (route.name !== 'study-plan' || !isAuthenticated) {
+      setStudyPlan(null);
+      return;
+    }
+    loadStudyPlan(route.params.courseId).catch((error) => setMessage(error.message));
+  }, [route, isAuthenticated]);
+
+  useEffect(() => {
     if (route.name !== 'chat' || !isAuthenticated) {
       setChatSessions([]);
       setChatMessages([]);
@@ -244,16 +281,28 @@ export default function App() {
       try {
         const nextJob = await loadJob(activeJob.id);
         const courseId =
-          route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat'
+          route.name === 'document-chunks' ||
+          route.name === 'search' ||
+          route.name === 'topics' ||
+          route.name === 'chat' ||
+          route.name === 'study-plan'
             ? route.params.courseId
             : selectedCourseId;
         if (courseId && nextJob.course_id === courseId) {
-          await loadDocuments(courseId);
-          if (route.name === 'topics') {
-            await loadTopics(courseId);
+          const stepChanged = nextJob.current_step !== activeJob.current_step || nextJob.status !== activeJob.status;
+          if (stepChanged) {
+            await loadDocuments(courseId);
           }
-          if (route.name === 'chat') {
-            await loadChatSessions(courseId);
+          if (nextJob.status === 'completed') {
+            if (route.name === 'topics') {
+              await loadTopics(courseId);
+            }
+            if (route.name === 'study-plan') {
+              await loadStudyPlan(courseId);
+            }
+            if (route.name === 'chat') {
+              await loadChatSessions(courseId);
+            }
           }
         }
       } catch (error) {
@@ -295,6 +344,7 @@ export default function App() {
     setActiveJob(null);
     setChunkSummary(null);
     setTopics([]);
+    setStudyPlan(null);
     setChatSessions([]);
     setChatMessages([]);
     setActiveSessionId(null);
@@ -375,6 +425,7 @@ export default function App() {
         setChunkSummary(null);
         setSearchResults([]);
         setTopics([]);
+        setStudyPlan(null);
         setChatSessions([]);
         setChatMessages([]);
         setActiveSessionId(null);
@@ -404,6 +455,9 @@ export default function App() {
       await loadDocuments(courseId);
       if (route.name === 'topics') {
         await loadTopics(courseId);
+      }
+      if (route.name === 'study-plan') {
+        await loadStudyPlan(courseId);
       }
       setMessage('Material deleted.');
     } catch (error) {
@@ -437,6 +491,9 @@ export default function App() {
       await loadDocuments(courseId);
       if (route.name === 'topics') {
         await loadTopics(courseId);
+      }
+      if (route.name === 'study-plan') {
+        await loadStudyPlan(courseId);
       }
       setMessage('Upload started.');
     } catch (error) {
@@ -495,6 +552,25 @@ export default function App() {
     }
   }
 
+  async function handleStudyPlanGenerate(path: '/generate' | '/regenerate') {
+    const courseId = route.name === 'study-plan' ? route.params.courseId : selectedCourseId;
+    if (!courseId) return;
+    setStudyPlanLoading(true);
+    setMessage('');
+    try {
+      const payload = await apiFetch<{ plan: StudyPlan }>(`/courses/${courseId}/study-plan${path}`, {
+        method: 'POST',
+        body: JSON.stringify(studyPlanForm),
+      });
+      setStudyPlan(payload.plan);
+      setMessage(path === '/generate' ? 'Study plan generated.' : 'Study plan regenerated.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Study plan generation failed');
+    } finally {
+      setStudyPlanLoading(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="topbar">
@@ -540,6 +616,19 @@ export default function App() {
           topics={topics}
           loading={topicsLoading}
           onRefresh={() => route.name === 'topics' && refreshTopics(route.params.courseId)}
+        />
+      ) : route.name === 'study-plan' ? (
+        <StudyPlanView
+          course={selectedCourse}
+          plan={studyPlan}
+          loading={studyPlanLoading}
+          form={studyPlanForm}
+          onFormChange={setStudyPlanForm}
+          onGenerate={(event) => {
+            event.preventDefault();
+            handleStudyPlanGenerate('/generate').catch((error) => setMessage(error.message));
+          }}
+          onRegenerate={() => handleStudyPlanGenerate('/regenerate').catch((error) => setMessage(error.message))}
         />
       ) : route.name === 'chat' ? (
         <ChatView

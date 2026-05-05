@@ -9,7 +9,7 @@ from backend.app.services.chunking import build_hierarchical_chunks
 from backend.app.services.document_parser import parse_document
 from backend.app.services.jobs import UPLOAD_STEPS, mark_job_failed, update_job_step
 from backend.app.services.retrievers.factory import get_retriever
-from backend.app.services.topics import refresh_course_topics
+from backend.app.services.topics import delete_document_topics, sync_document_topics
 from backend.app.utils import normalize_material_type, secure_filename
 
 SUPPORTED_UPLOAD_TYPES = {
@@ -106,8 +106,8 @@ def process_document_job(db: Session, job: ProcessingJob) -> None:
         db.commit()
 
         update_job_step(job, "topic_extract")
-        refresh_course_topics(db, course=document.course)
         db.commit()
+        sync_document_topics(db, document=document)
 
         document.status = "completed"
         update_job_step(job, "complete")
@@ -125,12 +125,10 @@ def process_document_job(db: Session, job: ProcessingJob) -> None:
 
 def delete_document_record(db: Session, document: Document) -> None:
     file_path = Path(document.file_path) if document.file_path else None
-    course = document.course
     get_retriever(db).delete_document(user_id=document.user_id, document_id=document.id)
+    delete_document_topics(db, document=document)
     db.delete(document)
     db.commit()
-    if course:
-        refresh_course_topics(db, course=course)
 
     if file_path and file_path.exists():
         file_path.unlink(missing_ok=True)

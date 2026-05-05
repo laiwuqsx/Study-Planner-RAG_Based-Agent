@@ -119,10 +119,48 @@ export type Topic = {
   keywords: string[];
   importance: number;
   difficulty: number;
+  status: string;
+  quality_score: number;
+  review_note: string;
   source_chunk_ids: string[];
   prerequisites: string[];
   created_at: string;
   updated_at: string;
+};
+
+export type StudyPlanItem = {
+  id: number;
+  topic_id: number;
+  order_index: number;
+  title: string;
+  notes: string;
+  focus_points: string[];
+  context_snippets: string[];
+  estimated_effort_minutes: number;
+  importance: number;
+  difficulty: number;
+  source_chunk_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
+export type StudyPlan = {
+  id: number;
+  course_id: number;
+  title: string;
+  summary: string;
+  generation_mode: string;
+  item_count: number;
+  created_at: string;
+  updated_at: string;
+  items: StudyPlanItem[];
+};
+
+export type StudyPlanGenerateInput = {
+  goal: string;
+  sessions_per_week: number;
+  minutes_per_session: number;
+  topic_limit: number;
 };
 
 export type ChatSource = {

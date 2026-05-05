@@ -163,6 +163,9 @@ class TopicResponse(BaseModel):
     keywords: list[str]
     importance: int
     difficulty: int
+    status: str
+    quality_score: int
+    review_note: str
     source_chunk_ids: list[str]
     prerequisites: list[str]
     created_at: datetime
@@ -178,12 +181,21 @@ class TopicRefreshResponse(BaseModel):
     topics: list[TopicResponse]
 
 
+class TopicCurateResponse(BaseModel):
+    topic_count: int
+    updated_topic_count: int
+    topics: list[TopicResponse]
+
+
 class TopicUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=200)
     description: Optional[str] = None
     keywords: Optional[list[str]] = None
     importance: Optional[int] = Field(default=None, ge=1, le=5)
     difficulty: Optional[int] = Field(default=None, ge=1, le=5)
+    status: Optional[str] = Field(default=None, pattern="^(active|suspect|hidden)$")
+    quality_score: Optional[int] = Field(default=None, ge=1, le=5)
+    review_note: Optional[str] = None
     prerequisites: Optional[list[str]] = None
 
 
@@ -238,3 +250,42 @@ class ChatResponse(BaseModel):
     session: ChatSessionSummaryResponse
     user_message: ChatMessageResponse
     assistant_message: ChatMessageResponse
+
+
+class StudyPlanGenerateRequest(BaseModel):
+    goal: str = Field(default="Build a focused study plan for this course.", max_length=400)
+    sessions_per_week: int = Field(default=4, ge=1, le=14)
+    minutes_per_session: int = Field(default=90, ge=20, le=240)
+    topic_limit: int = Field(default=10, ge=1, le=16)
+
+
+class StudyPlanItemResponse(BaseModel):
+    id: int
+    topic_id: int
+    order_index: int
+    title: str
+    notes: str
+    focus_points: list[str]
+    context_snippets: list[str]
+    estimated_effort_minutes: int
+    importance: int
+    difficulty: int
+    source_chunk_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class StudyPlanResponse(BaseModel):
+    id: int
+    course_id: int
+    title: str
+    summary: str
+    generation_mode: str
+    item_count: int
+    created_at: datetime
+    updated_at: datetime
+    items: list[StudyPlanItemResponse]
+
+
+class StudyPlanGenerateResponse(BaseModel):
+    plan: StudyPlanResponse

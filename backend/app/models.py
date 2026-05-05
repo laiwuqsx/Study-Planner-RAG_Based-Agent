@@ -44,6 +44,7 @@ class Course(Base):
     documents = relationship("Document", back_populates="course", cascade="all, delete-orphan")
     processing_jobs = relationship("ProcessingJob", back_populates="course", cascade="all, delete-orphan")
     topics = relationship("Topic", back_populates="course", cascade="all, delete-orphan")
+    study_plans = relationship("StudyPlan", back_populates="course", cascade="all, delete-orphan")
     chat_sessions = relationship("ChatSession", back_populates="course", cascade="all, delete-orphan")
 
 
@@ -72,6 +73,8 @@ class Document(Base):
     processing_jobs = relationship("ProcessingJob", back_populates="document", cascade="all, delete-orphan")
     parent_chunks = relationship("ParentChunk", back_populates="document", cascade="all, delete-orphan")
     child_chunks = relationship("ChildChunk", back_populates="document", cascade="all, delete-orphan")
+    document_topics = relationship("DocumentTopic", back_populates="document", cascade="all, delete-orphan")
+    topic_sources = relationship("TopicSource", back_populates="document", cascade="all, delete-orphan")
 
 
 class Topic(Base):
@@ -81,6 +84,39 @@ class Topic(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+    normalized_name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    description: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    keywords_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    importance: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    difficulty: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="active", nullable=False, index=True)
+    quality_score: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    review_note: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    source_chunk_ids_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    prerequisites_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    course = relationship("Course", back_populates="topics")
+    document_topics = relationship("DocumentTopic", back_populates="topic", cascade="all, delete-orphan")
+    topic_sources = relationship("TopicSource", back_populates="topic", cascade="all, delete-orphan")
+
+
+class DocumentTopic(Base):
+    __tablename__ = "document_topics"
+    __table_args__ = (UniqueConstraint("document_id", "normalized_name", name="uq_document_topic_normalized_name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True)
+    topic_id: Mapped[int | None] = mapped_column(ForeignKey("topics.id", ondelete="SET NULL"), nullable=True, index=True)
     name: Mapped[str] = mapped_column(String(200), nullable=False)
     normalized_name: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
     description: Mapped[str] = mapped_column(Text, default="", nullable=False)
@@ -97,7 +133,72 @@ class Topic(Base):
         nullable=False,
     )
 
-    course = relationship("Course", back_populates="topics")
+    document = relationship("Document", back_populates="document_topics")
+    topic = relationship("Topic", back_populates="document_topics")
+
+
+class TopicSource(Base):
+    __tablename__ = "topic_sources"
+    __table_args__ = (UniqueConstraint("topic_id", "source_chunk_id", name="uq_topic_source_chunk"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id", ondelete="CASCADE"), nullable=False, index=True)
+    document_id: Mapped[int] = mapped_column(ForeignKey("documents.id", ondelete="CASCADE"), nullable=False, index=True)
+    source_chunk_id: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    topic = relationship("Topic", back_populates="topic_sources")
+    document = relationship("Document", back_populates="topic_sources")
+
+
+class StudyPlan(Base):
+    __tablename__ = "study_plans"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(200), default="Study plan", nullable=False)
+    summary: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    generation_mode: Mapped[str] = mapped_column(String(40), default="rule", nullable=False)
+    item_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    course = relationship("Course", back_populates="study_plans")
+    items = relationship("StudyPlanItem", back_populates="plan", cascade="all, delete-orphan")
+
+
+class StudyPlanItem(Base):
+    __tablename__ = "study_plan_items"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    plan_id: Mapped[int] = mapped_column(ForeignKey("study_plans.id", ondelete="CASCADE"), nullable=False, index=True)
+    topic_id: Mapped[int] = mapped_column(ForeignKey("topics.id", ondelete="CASCADE"), nullable=False, index=True)
+    order_index: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    notes: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    focus_points_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    context_snippets_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
+    estimated_effort_minutes: Mapped[int] = mapped_column(Integer, default=60, nullable=False)
+    importance: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    difficulty: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    source_chunk_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False,
+    )
+
+    plan = relationship("StudyPlan", back_populates="items")
 
 
 class ChatSession(Base):
