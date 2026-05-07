@@ -207,6 +207,12 @@ h3 {
   grid-template-columns: minmax(0, 1fr) 160px auto;
 }
 
+.topic-chat-form {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .plan-form {
   display: grid;
   gap: 14px;

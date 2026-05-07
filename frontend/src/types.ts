@@ -92,6 +92,11 @@ export type ChunkRoute = {
   documentId: number;
 };
 
+export type TopicReviewRoute = {
+  courseId: number;
+  topicId: number;
+};
+
 export type SearchResult = {
   chunk_id: string;
   root_chunk_id: string;
@@ -126,6 +131,22 @@ export type Topic = {
   prerequisites: string[];
   created_at: string;
   updated_at: string;
+};
+
+export type TopicReviewChunk = {
+  chunk_id: string;
+  document_id: number;
+  filename: string;
+  material_type: string;
+  page_number: number | null;
+  section_title: string;
+  text: string;
+};
+
+export type TopicReview = {
+  topic: Topic;
+  source_chunks: TopicReviewChunk[];
+  related_topics: Topic[];
 };
 
 export type StudyPlanItem = {

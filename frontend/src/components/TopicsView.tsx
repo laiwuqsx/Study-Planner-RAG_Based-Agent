@@ -1,4 +1,4 @@
-import { navigateToWorkspace } from '../router';
+import { navigateToTopicReview, navigateToWorkspace } from '../router';
 import { Course, Topic } from '../types';
 
 type TopicsViewProps = {
@@ -59,6 +59,13 @@ export function TopicsView({ course, topics, loading, onRefresh }: TopicsViewPro
                 )}
                 {topic.prerequisites.length > 0 && (
                   <p className="document-meta">Prerequisites: {topic.prerequisites.join(', ')}</p>
+                )}
+                {course && (
+                  <div className="result-actions">
+                    <button type="button" className="link-button" onClick={() => navigateToTopicReview(course.id, topic.id)}>
+                      Review topic
+                    </button>
+                  </div>
                 )}
               </article>
             ))}

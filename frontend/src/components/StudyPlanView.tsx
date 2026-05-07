@@ -1,6 +1,6 @@
 import { FormEvent } from 'react';
 
-import { navigateToWorkspace } from '../router';
+import { navigateToTopicReview, navigateToWorkspace } from '../router';
 import { Course, StudyPlan, StudyPlanGenerateInput } from '../types';
 
 type StudyPlanViewProps = {
@@ -132,6 +132,17 @@ export function StudyPlanView({ course, plan, loading, form, onFormChange, onGen
                           {snippet}
                         </p>
                       ))}
+                    </div>
+                  )}
+                  {course && (
+                    <div className="result-actions">
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => navigateToTopicReview(course.id, item.topic_id)}
+                      >
+                        Review topic
+                      </button>
                     </div>
                   )}
                 </article>

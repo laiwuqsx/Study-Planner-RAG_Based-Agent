@@ -5,6 +5,7 @@ import { ChatView } from './components/ChatView';
 import { DocumentChunksView } from './components/DocumentChunksView';
 import { SearchView } from './components/SearchView';
 import { StudyPlanView } from './components/StudyPlanView';
+import { TopicReviewView } from './components/TopicReviewView';
 import { TopicsView } from './components/TopicsView';
 import { WorkspaceView } from './components/WorkspaceView';
 import { API_BASE_URL, TOKEN_KEY } from './constants';
@@ -25,6 +26,7 @@ import {
   StudyPlan,
   StudyPlanGenerateInput,
   Topic,
+  TopicReview,
   UploadResponse,
   User,
 } from './types';
@@ -52,6 +54,12 @@ export default function App() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [topicsLoading, setTopicsLoading] = useState(false);
+  const [topicReview, setTopicReview] = useState<TopicReview | null>(null);
+  const [topicReviewLoading, setTopicReviewLoading] = useState(false);
+  const [topicReviewChatMessages, setTopicReviewChatMessages] = useState<ChatMessage[]>([]);
+  const [topicReviewChatQuery, setTopicReviewChatQuery] = useState('');
+  const [topicReviewChatLoading, setTopicReviewChatLoading] = useState(false);
+  const [topicReviewSessionId, setTopicReviewSessionId] = useState<number | null>(null);
   const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(null);
   const [studyPlanLoading, setStudyPlanLoading] = useState(false);
   const [studyPlanForm, setStudyPlanForm] = useState<StudyPlanGenerateInput>({
@@ -105,7 +113,7 @@ export default function App() {
     const payload = await apiFetch<{ courses: Course[] }>('/courses');
     setCourses(payload.courses);
     setSelectedCourseId((current) => {
-      if (route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat' || route.name === 'study-plan') return route.params.courseId;
+      if (route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'topic-review' || route.name === 'chat' || route.name === 'study-plan') return route.params.courseId;
       if (current && payload.courses.some((course) => course.id === current)) return current;
       return payload.courses[0]?.id ?? null;
     });
@@ -145,6 +153,19 @@ export default function App() {
       setMessage(error instanceof Error ? error.message : 'Topic load failed');
     } finally {
       setTopicsLoading(false);
+    }
+  }
+
+  async function loadTopicReview(courseId: number, topicId: number) {
+    setTopicReviewLoading(true);
+    try {
+      const payload = await apiFetch<TopicReview>(`/courses/${courseId}/topics/${topicId}/review`);
+      setTopicReview(payload);
+    } catch (error) {
+      setTopicReview(null);
+      setMessage(error instanceof Error ? error.message : 'Topic review load failed');
+    } finally {
+      setTopicReviewLoading(false);
     }
   }
 
@@ -212,12 +233,13 @@ export default function App() {
       setChunkSummary(null);
       setSearchResults([]);
       setTopics([]);
+      setTopicReview(null);
       setStudyPlan(null);
       setChatSessions([]);
       setChatMessages([]);
       return;
     }
-    const courseId = route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'chat' || route.name === 'study-plan'
+    const courseId = route.name === 'document-chunks' || route.name === 'search' || route.name === 'topics' || route.name === 'topic-review' || route.name === 'chat' || route.name === 'study-plan'
       ? route.params.courseId
       : selectedCourseId;
     if (!courseId) {
@@ -225,6 +247,7 @@ export default function App() {
       setChunkSummary(null);
       setSearchResults([]);
       setTopics([]);
+      setTopicReview(null);
       setStudyPlan(null);
       setChatSessions([]);
       setChatMessages([]);
@@ -258,6 +281,17 @@ export default function App() {
   }, [route, isAuthenticated]);
 
   useEffect(() => {
+    if (route.name !== 'topic-review' || !isAuthenticated) {
+      setTopicReview(null);
+      setTopicReviewChatMessages([]);
+      setTopicReviewChatQuery('');
+      setTopicReviewSessionId(null);
+      return;
+    }
+    loadTopicReview(route.params.courseId, route.params.topicId).catch((error) => setMessage(error.message));
+  }, [route, isAuthenticated]);
+
+  useEffect(() => {
     if (route.name !== 'study-plan' || !isAuthenticated) {
       setStudyPlan(null);
       return;
@@ -272,6 +306,10 @@ export default function App() {
       setActiveSessionId(null);
       return;
     }
+    const presetQuery = new URLSearchParams(window.location.search).get('q');
+    if (presetQuery) {
+      setChatQuery(presetQuery);
+    }
     loadChatSessions(route.params.courseId).catch((error) => setMessage(error.message));
   }, [route, isAuthenticated]);
 
@@ -284,6 +322,7 @@ export default function App() {
           route.name === 'document-chunks' ||
           route.name === 'search' ||
           route.name === 'topics' ||
+          route.name === 'topic-review' ||
           route.name === 'chat' ||
           route.name === 'study-plan'
             ? route.params.courseId
@@ -344,6 +383,10 @@ export default function App() {
     setActiveJob(null);
     setChunkSummary(null);
     setTopics([]);
+    setTopicReview(null);
+    setTopicReviewChatMessages([]);
+    setTopicReviewChatQuery('');
+    setTopicReviewSessionId(null);
     setStudyPlan(null);
     setChatSessions([]);
     setChatMessages([]);
@@ -425,6 +468,10 @@ export default function App() {
         setChunkSummary(null);
         setSearchResults([]);
         setTopics([]);
+        setTopicReview(null);
+        setTopicReviewChatMessages([]);
+        setTopicReviewChatQuery('');
+        setTopicReviewSessionId(null);
         setStudyPlan(null);
         setChatSessions([]);
         setChatMessages([]);
@@ -571,6 +618,33 @@ export default function App() {
     }
   }
 
+  async function handleTopicReviewChatSubmit(event: FormEvent) {
+    event.preventDefault();
+    const courseId = route.name === 'topic-review' ? route.params.courseId : selectedCourseId;
+    const topicName = topicReview?.topic.name;
+    if (!courseId || !topicReview || !topicReviewChatQuery.trim()) return;
+    setTopicReviewChatLoading(true);
+    setMessage('');
+    try {
+      const payload = await apiFetch<ChatResponse>(`/courses/${courseId}/chat`, {
+        method: 'POST',
+        body: JSON.stringify({
+          message: `About the topic "${topicName}": ${topicReviewChatQuery.trim()}`,
+          session_id: topicReviewSessionId,
+          retrieval_mode: 'hybrid',
+          top_k: 5,
+        }),
+      });
+      setTopicReviewSessionId(payload.session.id);
+      setTopicReviewChatMessages((current) => [...current, payload.user_message, payload.assistant_message]);
+      setTopicReviewChatQuery('');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Topic review chat failed');
+    } finally {
+      setTopicReviewChatLoading(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="topbar">
@@ -616,6 +690,17 @@ export default function App() {
           topics={topics}
           loading={topicsLoading}
           onRefresh={() => route.name === 'topics' && refreshTopics(route.params.courseId)}
+        />
+      ) : route.name === 'topic-review' ? (
+        <TopicReviewView
+          course={selectedCourse}
+          review={topicReview}
+          loading={topicReviewLoading}
+          chatQuery={topicReviewChatQuery}
+          chatLoading={topicReviewChatLoading}
+          chatMessages={topicReviewChatMessages}
+          onChatQueryChange={setTopicReviewChatQuery}
+          onChatSubmit={handleTopicReviewChatSubmit}
         />
       ) : route.name === 'study-plan' ? (
         <StudyPlanView

@@ -1,9 +1,10 @@
-import { ChunkRoute } from './types';
+import { ChunkRoute, TopicReviewRoute } from './types';
 
 export type AppRoute =
   | { name: 'workspace' }
   | { name: 'search'; params: { courseId: number } }
   | { name: 'topics'; params: { courseId: number } }
+  | { name: 'topic-review'; params: TopicReviewRoute }
   | { name: 'study-plan'; params: { courseId: number } }
   | { name: 'chat'; params: { courseId: number } }
   | { name: 'document-chunks'; params: ChunkRoute };
@@ -22,6 +23,16 @@ export function getCurrentRoute(): AppRoute {
     return {
       name: 'topics',
       params: { courseId: Number(topicsMatch[1]) },
+    };
+  }
+  const topicReviewMatch = path.match(/^\/courses\/(\d+)\/topics\/(\d+)\/review$/);
+  if (topicReviewMatch) {
+    return {
+      name: 'topic-review',
+      params: {
+        courseId: Number(topicReviewMatch[1]),
+        topicId: Number(topicReviewMatch[2]),
+      },
     };
   }
   const studyPlanMatch = path.match(/^\/courses\/(\d+)\/study-plan$/);
@@ -66,8 +77,9 @@ export function navigateToTopics(courseId: number) {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
-export function navigateToChat(courseId: number) {
-  window.history.pushState({}, '', `/courses/${courseId}/chat`);
+export function navigateToChat(courseId: number, prompt?: string) {
+  const query = prompt ? `?q=${encodeURIComponent(prompt)}` : '';
+  window.history.pushState({}, '', `/courses/${courseId}/chat${query}`);
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
@@ -78,5 +90,10 @@ export function navigateToStudyPlan(courseId: number) {
 
 export function navigateToDocumentChunks(courseId: number, documentId: number) {
   window.history.pushState({}, '', `/courses/${courseId}/documents/${documentId}/chunks`);
+  window.dispatchEvent(new PopStateEvent('popstate'));
+}
+
+export function navigateToTopicReview(courseId: number, topicId: number) {
+  window.history.pushState({}, '', `/courses/${courseId}/topics/${topicId}/review`);
   window.dispatchEvent(new PopStateEvent('popstate'));
 }

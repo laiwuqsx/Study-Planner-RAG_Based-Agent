@@ -187,6 +187,22 @@ class TopicCurateResponse(BaseModel):
     topics: list[TopicResponse]
 
 
+class TopicReviewChunkResponse(BaseModel):
+    chunk_id: str
+    document_id: int
+    filename: str
+    material_type: str
+    page_number: int | None
+    section_title: str
+    text: str
+
+
+class TopicReviewResponse(BaseModel):
+    topic: TopicResponse
+    source_chunks: list[TopicReviewChunkResponse]
+    related_topics: list[TopicResponse]
+
+
 class TopicUpdateRequest(BaseModel):
     name: Optional[str] = Field(default=None, min_length=1, max_length=200)
     description: Optional[str] = None

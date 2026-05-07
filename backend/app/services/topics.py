@@ -111,6 +111,28 @@ def get_course_topic(db: Session, *, user_id: int, course_id: int, topic_id: int
     return topic
 
 
+def get_topic_review_payload(db: Session, *, topic: Topic) -> dict:
+    source_chunk_ids = json.loads(topic.source_chunk_ids_json or "[]")
+    chunks = _load_topic_source_chunks(db, topic=topic, source_chunk_ids=source_chunk_ids)
+    related_topics = _find_related_topics(db, topic=topic)
+    return {
+        "topic": serialize_topic(topic),
+        "source_chunks": [
+            {
+                "chunk_id": chunk.chunk_id,
+                "document_id": chunk.document_id,
+                "filename": chunk.filename,
+                "material_type": chunk.material_type,
+                "page_number": chunk.page_number,
+                "section_title": chunk.section_title,
+                "text": chunk.text,
+            }
+            for chunk in chunks
+        ],
+        "related_topics": [serialize_topic(item) for item in related_topics],
+    }
+
+
 def refresh_course_topics(db: Session, *, course: Course) -> list[Topic]:
     documents = (
         db.query(Document)
@@ -486,6 +508,41 @@ def _document_id_for_source_chunk(rows: list[DocumentTopic], source_chunk_id: st
         if source_chunk_id in json.loads(row.source_chunk_ids_json or "[]"):
             return row.document_id
     return rows[0].document_id
+
+
+def _load_topic_source_chunks(db: Session, *, topic: Topic, source_chunk_ids: list[str]) -> list[ChildChunk]:
+    if not source_chunk_ids:
+        return []
+    chunks = (
+        db.query(ChildChunk)
+        .filter(
+            ChildChunk.user_id == topic.user_id,
+            ChildChunk.course_id == topic.course_id,
+            ChildChunk.chunk_id.in_(source_chunk_ids),
+        )
+        .order_by(ChildChunk.document_id.asc(), ChildChunk.chunk_index.asc())
+        .all()
+    )
+    by_id = {chunk.chunk_id: chunk for chunk in chunks}
+    return [by_id[chunk_id] for chunk_id in source_chunk_ids if chunk_id in by_id]
+
+
+def _find_related_topics(db: Session, *, topic: Topic) -> list[Topic]:
+    current_keywords = {item.lower() for item in json.loads(topic.keywords_json or "[]")}
+    current_name_tokens = set(normalize_topic_name(topic.name).split())
+    candidates = list_course_topics(db, user_id=topic.user_id, course_id=topic.course_id)
+    scored: list[tuple[int, Topic]] = []
+    for candidate in candidates:
+        if candidate.id == topic.id or candidate.status != "active":
+            continue
+        keywords = {item.lower() for item in json.loads(candidate.keywords_json or "[]")}
+        name_tokens = set(normalize_topic_name(candidate.name).split())
+        score = len(current_keywords & keywords) + len(current_name_tokens & name_tokens)
+        if score <= 0:
+            continue
+        scored.append((score, candidate))
+    scored.sort(key=lambda item: (-item[0], -item[1].importance, item[1].name.lower()))
+    return [item[1] for item in scored[:3]]
 
 
 def _extract_topics_from_candidates(candidates: list[dict]) -> list[dict]:
