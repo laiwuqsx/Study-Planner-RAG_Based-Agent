@@ -9,7 +9,15 @@ import { TopicReviewView } from './components/TopicReviewView';
 import { TopicsView } from './components/TopicsView';
 import { WorkspaceView } from './components/WorkspaceView';
 import { API_BASE_URL, TOKEN_KEY } from './constants';
-import { navigateToWorkspace, getCurrentRoute, type AppRoute } from './router';
+import {
+  navigateToChat,
+  navigateToSearch,
+  navigateToStudyPlan,
+  navigateToTopics,
+  navigateToWorkspace,
+  getCurrentRoute,
+  type AppRoute,
+} from './router';
 import {
   AuthMode,
   ChatMessage,
@@ -24,6 +32,7 @@ import {
   SearchResponse,
   SearchResult,
   StudyPlan,
+  StudyPlanListResponse,
   StudyPlanGenerateInput,
   Topic,
   TopicReview,
@@ -60,7 +69,9 @@ export default function App() {
   const [topicReviewChatQuery, setTopicReviewChatQuery] = useState('');
   const [topicReviewChatLoading, setTopicReviewChatLoading] = useState(false);
   const [topicReviewSessionId, setTopicReviewSessionId] = useState<number | null>(null);
-  const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(null);
+  const [topicPracticeLoading, setTopicPracticeLoading] = useState(false);
+  const [studyPlans, setStudyPlans] = useState<StudyPlan[]>([]);
+  const [activeStudyPlanId, setActiveStudyPlanId] = useState<number | null>(null);
   const [studyPlanLoading, setStudyPlanLoading] = useState(false);
   const [studyPlanForm, setStudyPlanForm] = useState<StudyPlanGenerateInput>({
     goal: 'Build a focused review plan for this course.',
@@ -85,6 +96,24 @@ export default function App() {
     if (route.name !== 'document-chunks') return null;
     return documents.find((document) => document.id === route.params.documentId) || null;
   }, [route, documents]);
+  const activeNav = useMemo(() => {
+    switch (route.name) {
+      case 'workspace':
+        return 'workspace';
+      case 'topics':
+      case 'topic-review':
+        return 'topics';
+      case 'study-plan':
+        return 'study-plan';
+      case 'chat':
+        return 'chat';
+      case 'search':
+      case 'document-chunks':
+        return 'search';
+      default:
+        return 'workspace';
+    }
+  }, [route]);
 
   async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
     const headers = new Headers(options.headers);
@@ -172,10 +201,15 @@ export default function App() {
   async function loadStudyPlan(courseId: number) {
     setStudyPlanLoading(true);
     try {
-      const payload = await apiFetch<StudyPlan>(`/courses/${courseId}/study-plan`);
-      setStudyPlan(payload);
+      const payload = await apiFetch<StudyPlanListResponse>(`/courses/${courseId}/study-plan/all`);
+      setStudyPlans(payload.plans);
+      setActiveStudyPlanId((current) => {
+        if (current && payload.plans.some((plan) => plan.id === current)) return current;
+        return payload.plans[0]?.id ?? null;
+      });
     } catch (error) {
-      setStudyPlan(null);
+      setStudyPlans([]);
+      setActiveStudyPlanId(null);
       const detail = error instanceof Error ? error.message : 'Study plan load failed';
       if (detail !== 'Study plan not found') {
         setMessage(detail);
@@ -234,7 +268,8 @@ export default function App() {
       setSearchResults([]);
       setTopics([]);
       setTopicReview(null);
-      setStudyPlan(null);
+      setStudyPlans([]);
+      setActiveStudyPlanId(null);
       setChatSessions([]);
       setChatMessages([]);
       return;
@@ -248,7 +283,8 @@ export default function App() {
       setSearchResults([]);
       setTopics([]);
       setTopicReview(null);
-      setStudyPlan(null);
+      setStudyPlans([]);
+      setActiveStudyPlanId(null);
       setChatSessions([]);
       setChatMessages([]);
       return;
@@ -293,7 +329,8 @@ export default function App() {
 
   useEffect(() => {
     if (route.name !== 'study-plan' || !isAuthenticated) {
-      setStudyPlan(null);
+      setStudyPlans([]);
+      setActiveStudyPlanId(null);
       return;
     }
     loadStudyPlan(route.params.courseId).catch((error) => setMessage(error.message));
@@ -387,7 +424,8 @@ export default function App() {
     setTopicReviewChatMessages([]);
     setTopicReviewChatQuery('');
     setTopicReviewSessionId(null);
-    setStudyPlan(null);
+    setStudyPlans([]);
+    setActiveStudyPlanId(null);
     setChatSessions([]);
     setChatMessages([]);
     setActiveSessionId(null);
@@ -472,7 +510,8 @@ export default function App() {
         setTopicReviewChatMessages([]);
         setTopicReviewChatQuery('');
         setTopicReviewSessionId(null);
-        setStudyPlan(null);
+        setStudyPlans([]);
+        setActiveStudyPlanId(null);
         setChatSessions([]);
         setChatMessages([]);
         setActiveSessionId(null);
@@ -609,7 +648,8 @@ export default function App() {
         method: 'POST',
         body: JSON.stringify(studyPlanForm),
       });
-      setStudyPlan(payload.plan);
+      setStudyPlans((current) => [payload.plan, ...current.filter((plan) => plan.id !== payload.plan.id)]);
+      setActiveStudyPlanId(payload.plan.id);
       setMessage(path === '/generate' ? 'Study plan generated.' : 'Study plan regenerated.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Study plan generation failed');
@@ -673,7 +713,8 @@ export default function App() {
         method: 'PATCH',
         body: JSON.stringify({ status }),
       });
-      setStudyPlan(payload);
+      setStudyPlans((current) => current.map((plan) => (plan.id === payload.id ? payload : plan)));
+      setActiveStudyPlanId(payload.id);
       setMessage(`Study plan item marked ${status.replace('_', ' ')}.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Study plan item update failed');
@@ -682,68 +723,221 @@ export default function App() {
     }
   }
 
+  async function handleDeleteStudyPlan(planId: number) {
+    const courseId = route.name === 'study-plan' ? route.params.courseId : selectedCourseId;
+    if (!courseId || !window.confirm('Delete this saved study plan?')) return;
+    setStudyPlanLoading(true);
+    setMessage('');
+    try {
+      await apiFetch(`/courses/${courseId}/study-plan/${planId}`, { method: 'DELETE' });
+      setStudyPlans((current) => {
+        const nextPlans = current.filter((plan) => plan.id !== planId);
+        setActiveStudyPlanId((currentActive) => {
+          if (currentActive !== planId) return currentActive;
+          return nextPlans[0]?.id ?? null;
+        });
+        return nextPlans;
+      });
+      setMessage('Study plan deleted.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Study plan delete failed');
+    } finally {
+      setStudyPlanLoading(false);
+    }
+  }
+
+  function handleSelectStudyPlan(planId: number) {
+    setActiveStudyPlanId((current) => (current === planId ? null : planId));
+  }
+
+  async function handleRefreshTopicPracticeQuestions() {
+    const courseId = route.name === 'topic-review' ? route.params.courseId : selectedCourseId;
+    const topicId = route.name === 'topic-review' ? route.params.topicId : topicReview?.topic.id;
+    if (!courseId || !topicId) return;
+    setTopicPracticeLoading(true);
+    setMessage('');
+    try {
+      const payload = await apiFetch<{ topic_id: number; questions: TopicReview['practice_questions'] }>(
+        `/courses/${courseId}/topics/${topicId}/practice-questions`,
+        { method: 'POST' },
+      );
+      setTopicReview((current) => (current ? { ...current, practice_questions: payload.questions } : current));
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Practice question generation failed');
+    } finally {
+      setTopicPracticeLoading(false);
+    }
+  }
+
+  function navigateFromTopbar(destination: 'workspace' | 'topics' | 'study-plan' | 'chat' | 'search') {
+    if (destination === 'workspace') {
+      navigateToWorkspace();
+      return;
+    }
+    if (!selectedCourseId) return;
+    if (destination === 'topics') navigateToTopics(selectedCourseId);
+    if (destination === 'study-plan') navigateToStudyPlan(selectedCourseId);
+    if (destination === 'chat') navigateToChat(selectedCourseId);
+    if (destination === 'search') navigateToSearch(selectedCourseId);
+  }
+
+  function handleTopbarCourseChange(courseId: number) {
+    setSelectedCourseId(courseId);
+    if (route.name === 'workspace') return;
+    if (route.name === 'topics' || route.name === 'topic-review') {
+      navigateToTopics(courseId);
+      return;
+    }
+    if (route.name === 'study-plan') {
+      navigateToStudyPlan(courseId);
+      return;
+    }
+    if (route.name === 'chat') {
+      navigateToChat(courseId);
+      return;
+    }
+    if (route.name === 'search' || route.name === 'document-chunks') {
+      navigateToSearch(courseId);
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="topbar">
-        <div>
-          <p className="eyebrow">Student Workspace</p>
-          <h1>Study Planner Agent</h1>
+        <div className="topbar-brand">
+          <div>
+            <h1>Study Planner Agent</h1>
+            <p className="topbar-subtitle">Course materials, topic review, study plans, and grounded chat in one place.</p>
+          </div>
         </div>
         {isAuthenticated && user && (
           <div className="user-panel">
-            <span>{user.username}</span>
-            <button type="button" onClick={handleLogout}>Log out</button>
+            <div className="course-switcher">
+              <label className="course-switcher-label" htmlFor="topbar-course-select">
+                Course
+              </label>
+              <select
+                id="topbar-course-select"
+                value={selectedCourseId ?? ''}
+                onChange={(event) => handleTopbarCourseChange(Number(event.target.value))}
+                disabled={courses.length === 0}
+              >
+                {courses.length === 0 ? (
+                  <option value="">No courses</option>
+                ) : (
+                  courses.map((course) => (
+                    <option key={course.id} value={course.id}>
+                      {course.term ? `${course.name} · ${course.term}` : course.name}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
+            <div className="user-meta">
+              <span>{user.username}</span>
+              <p>{selectedCourse?.term || 'Choose a course to unlock every workspace view.'}</p>
+            </div>
+            <button type="button" className="secondary-button" onClick={handleLogout}>Log out</button>
           </div>
         )}
       </section>
 
+      {isAuthenticated && (
+        <nav className="app-nav" aria-label="Primary">
+          <button
+            type="button"
+            className={`nav-link ${activeNav === 'workspace' ? 'is-active' : ''}`}
+            onClick={() => navigateFromTopbar('workspace')}
+          >
+            Workspace
+          </button>
+          <button
+            type="button"
+            className={`nav-link ${activeNav === 'topics' ? 'is-active' : ''}`}
+            onClick={() => navigateFromTopbar('topics')}
+            disabled={!selectedCourseId}
+          >
+            Topics
+          </button>
+          <button
+            type="button"
+            className={`nav-link ${activeNav === 'study-plan' ? 'is-active' : ''}`}
+            onClick={() => navigateFromTopbar('study-plan')}
+            disabled={!selectedCourseId}
+          >
+            Study Plan
+          </button>
+          <button
+            type="button"
+            className={`nav-link ${activeNav === 'chat' ? 'is-active' : ''}`}
+            onClick={() => navigateFromTopbar('chat')}
+            disabled={!selectedCourseId}
+          >
+            Chat
+          </button>
+          <button
+            type="button"
+            className={`nav-link ${activeNav === 'search' ? 'is-active' : ''}`}
+            onClick={() => navigateFromTopbar('search')}
+            disabled={!selectedCourseId}
+          >
+            Search
+          </button>
+        </nav>
+      )}
+
       {message && <div className="notice">{message}</div>}
 
-      {!isAuthenticated ? (
-        <AuthView
-          authMode={authMode}
-          username={username}
-          password={password}
-          loading={loading}
-          onSubmit={handleAuthSubmit}
-          onUsernameChange={setUsername}
-          onPasswordChange={setPassword}
-          onToggleMode={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
-        />
-      ) : route.name === 'search' ? (
-        <SearchView
-          course={selectedCourse}
-          query={searchQuery}
-          retrievalMode={retrievalMode}
-          results={searchResults}
-          loading={searchLoading}
-          onQueryChange={setSearchQuery}
-          onRetrievalModeChange={setRetrievalMode}
-          onSubmit={handleSearchSubmit}
-        />
-      ) : route.name === 'topics' ? (
-        <TopicsView
-          course={selectedCourse}
-          topics={topics}
-          loading={topicsLoading}
-          onRefresh={() => route.name === 'topics' && refreshTopics(route.params.courseId)}
-        />
-      ) : route.name === 'topic-review' ? (
+      <section className="app-content">
+        {!isAuthenticated ? (
+          <AuthView
+            authMode={authMode}
+            username={username}
+            password={password}
+            loading={loading}
+            onSubmit={handleAuthSubmit}
+            onUsernameChange={setUsername}
+            onPasswordChange={setPassword}
+            onToggleMode={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+          />
+        ) : route.name === 'search' ? (
+          <SearchView
+            course={selectedCourse}
+            query={searchQuery}
+            retrievalMode={retrievalMode}
+            results={searchResults}
+            loading={searchLoading}
+            onQueryChange={setSearchQuery}
+            onRetrievalModeChange={setRetrievalMode}
+            onSubmit={handleSearchSubmit}
+          />
+        ) : route.name === 'topics' ? (
+          <TopicsView
+            course={selectedCourse}
+            topics={topics}
+            loading={topicsLoading}
+            onRefresh={() => route.name === 'topics' && refreshTopics(route.params.courseId)}
+          />
+        ) : route.name === 'topic-review' ? (
         <TopicReviewView
           course={selectedCourse}
           review={topicReview}
           loading={topicReviewLoading}
+          practiceLoading={topicPracticeLoading}
+          backTarget={new URLSearchParams(window.location.search).get('from') === 'study-plan' ? 'study-plan' : 'topics'}
           chatQuery={topicReviewChatQuery}
           chatLoading={topicReviewChatLoading}
           chatMessages={topicReviewChatMessages}
           onChatQueryChange={setTopicReviewChatQuery}
           onChatSubmit={handleTopicReviewChatSubmit}
           onMasteryChange={handleTopicMasteryChange}
+          onRefreshPracticeQuestions={handleRefreshTopicPracticeQuestions}
         />
-      ) : route.name === 'study-plan' ? (
+        ) : route.name === 'study-plan' ? (
         <StudyPlanView
           course={selectedCourse}
-          plan={studyPlan}
+          plans={studyPlans}
+          activePlanId={activeStudyPlanId}
           loading={studyPlanLoading}
           form={studyPlanForm}
           onFormChange={setStudyPlanForm}
@@ -752,63 +946,66 @@ export default function App() {
             handleStudyPlanGenerate('/generate').catch((error) => setMessage(error.message));
           }}
           onRegenerate={() => handleStudyPlanGenerate('/regenerate').catch((error) => setMessage(error.message))}
+          onSelectPlan={handleSelectStudyPlan}
+          onDeletePlan={handleDeleteStudyPlan}
           onItemStatusChange={handleStudyPlanItemStatusChange}
         />
-      ) : route.name === 'chat' ? (
-        <ChatView
-          course={selectedCourse}
-          sessions={chatSessions}
-          activeSessionId={activeSessionId}
-          messages={chatMessages}
-          query={chatQuery}
-          retrievalMode={retrievalMode}
-          loading={chatLoading}
-          onNewSession={() => {
-            setActiveSessionId(null);
-            setChatMessages([]);
-          }}
-          onSelectSession={(sessionId) => loadChatSession(sessionId).catch((error) => setMessage(error.message))}
-          onDeleteSession={handleDeleteSession}
-          onQueryChange={setChatQuery}
-          onRetrievalModeChange={setRetrievalMode}
-          onSubmit={handleChatSubmit}
-        />
-      ) : route.name === 'document-chunks' ? (
-        <DocumentChunksView
-          course={selectedCourse}
-          document={routedDocument}
-          chunkSummary={chunkSummary}
-          loading={chunkLoading}
-          onBack={navigateToWorkspace}
-        />
-      ) : (
-        <WorkspaceView
-          courses={courses}
-          selectedCourseId={selectedCourseId}
-          courseForm={courseForm}
-          editingId={editingId}
-          documents={documents}
-          selectedFile={selectedFile}
-          materialType={materialType}
-          activeJob={activeJob}
-          loading={loading}
-          onCourseSubmit={handleCourseSubmit}
-          onCourseFormChange={setCourseForm}
-          onCancelEdit={() => {
-            setEditingId(null);
-            setCourseForm({ name: '', term: '', description: '' });
-          }}
-          onRefreshCourses={loadCourses}
-          onSelectCourse={setSelectedCourseId}
-          onStartEdit={startEdit}
-          onDeleteCourse={deleteCourse}
-          onUploadSubmit={handleUploadSubmit}
-          onMaterialTypeChange={setMaterialType}
-          onFileChange={setSelectedFile}
-          onRefreshDocuments={() => selectedCourseId && loadDocuments(selectedCourseId)}
-          onDeleteDocument={deleteDocument}
-        />
-      )}
+        ) : route.name === 'chat' ? (
+          <ChatView
+            course={selectedCourse}
+            sessions={chatSessions}
+            activeSessionId={activeSessionId}
+            messages={chatMessages}
+            query={chatQuery}
+            retrievalMode={retrievalMode}
+            loading={chatLoading}
+            onNewSession={() => {
+              setActiveSessionId(null);
+              setChatMessages([]);
+            }}
+            onSelectSession={(sessionId) => loadChatSession(sessionId).catch((error) => setMessage(error.message))}
+            onDeleteSession={handleDeleteSession}
+            onQueryChange={setChatQuery}
+            onRetrievalModeChange={setRetrievalMode}
+            onSubmit={handleChatSubmit}
+          />
+        ) : route.name === 'document-chunks' ? (
+          <DocumentChunksView
+            course={selectedCourse}
+            document={routedDocument}
+            chunkSummary={chunkSummary}
+            loading={chunkLoading}
+            onBack={navigateToWorkspace}
+          />
+        ) : (
+          <WorkspaceView
+            courses={courses}
+            selectedCourseId={selectedCourseId}
+            courseForm={courseForm}
+            editingId={editingId}
+            documents={documents}
+            selectedFile={selectedFile}
+            materialType={materialType}
+            activeJob={activeJob}
+            loading={loading}
+            onCourseSubmit={handleCourseSubmit}
+            onCourseFormChange={setCourseForm}
+            onCancelEdit={() => {
+              setEditingId(null);
+              setCourseForm({ name: '', term: '', description: '' });
+            }}
+            onRefreshCourses={loadCourses}
+            onSelectCourse={setSelectedCourseId}
+            onStartEdit={startEdit}
+            onDeleteCourse={deleteCourse}
+            onUploadSubmit={handleUploadSubmit}
+            onMaterialTypeChange={setMaterialType}
+            onFileChange={setSelectedFile}
+            onRefreshDocuments={() => selectedCourseId && loadDocuments(selectedCourseId)}
+            onDeleteDocument={deleteDocument}
+          />
+        )}
+      </section>
     </main>
   );
 }

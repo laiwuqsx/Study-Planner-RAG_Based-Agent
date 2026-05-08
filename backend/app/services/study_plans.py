@@ -20,10 +20,25 @@ def get_latest_study_plan(db: Session, *, user_id: int, course_id: int) -> Study
     )
 
 
+def list_course_study_plans(db: Session, *, user_id: int, course_id: int) -> list[StudyPlan]:
+    return (
+        db.query(StudyPlan)
+        .options(selectinload(StudyPlan.items))
+        .filter(StudyPlan.user_id == user_id, StudyPlan.course_id == course_id)
+        .order_by(StudyPlan.created_at.desc(), StudyPlan.id.desc())
+        .all()
+    )
+
+
 def delete_course_study_plans(db: Session, *, user_id: int, course_id: int) -> None:
     plans = db.query(StudyPlan).filter(StudyPlan.user_id == user_id, StudyPlan.course_id == course_id).all()
     for plan in plans:
         db.delete(plan)
+    db.commit()
+
+
+def delete_study_plan(db: Session, *, plan: StudyPlan) -> None:
+    db.delete(plan)
     db.commit()
 
 
@@ -77,8 +92,6 @@ def generate_study_plan(
             minutes_per_session=minutes_per_session,
         )
 
-    delete_course_study_plans(db, user_id=course.user_id, course_id=course.id)
-
     plan = StudyPlan(
         user_id=course.user_id,
         course_id=course.id,
@@ -110,7 +123,13 @@ def generate_study_plan(
 
     db.commit()
     db.refresh(plan)
-    return get_latest_study_plan(db, user_id=course.user_id, course_id=course.id) or plan
+    return (
+        db.query(StudyPlan)
+        .options(selectinload(StudyPlan.items))
+        .filter(StudyPlan.id == plan.id)
+        .first()
+        or plan
+    )
 
 
 def serialize_study_plan(plan: StudyPlan) -> StudyPlanResponse:

@@ -12,17 +12,17 @@ export function TopicsView({ course, topics, loading, onRefresh }: TopicsViewPro
   return (
     <section className="chunk-page">
       <section className="panel">
-        <div className="section-heading">
+        <div className="page-header">
           <div>
             <p className="eyebrow">Course Topics</p>
             <h2>{course ? course.name : 'Topics'}</h2>
-            <p className="section-copy">Extracted topics are grouped from indexed material chunks and linked to source chunks.</p>
+            <p className="section-copy">Extracted topics are grouped from indexed material chunks and organized for quick review.</p>
           </div>
-          <div className="result-actions">
+          <div className="toolbar-actions">
             <button type="button" onClick={onRefresh} disabled={loading}>
               {loading ? 'Refreshing...' : 'Refresh topics'}
             </button>
-            <button type="button" className="link-button" onClick={navigateToWorkspace}>
+            <button type="button" className="secondary-button" onClick={navigateToWorkspace}>
               Back to workspace
             </button>
           </div>
@@ -30,8 +30,11 @@ export function TopicsView({ course, topics, loading, onRefresh }: TopicsViewPro
       </section>
 
       <section className="panel">
-        <div className="section-heading">
-          <h2>Topic list</h2>
+        <div className="page-header compact">
+          <div>
+            <p className="eyebrow">Review Queue</p>
+            <h2>Topic list</h2>
+          </div>
         </div>
         {topics.length === 0 ? (
           <p className="empty-state">No topics yet. Upload materials or refresh extraction for this course.</p>
@@ -39,13 +42,22 @@ export function TopicsView({ course, topics, loading, onRefresh }: TopicsViewPro
           <div className="topic-list">
             {topics.map((topic) => (
               <article className="topic-card" key={topic.id}>
+                <div className="card-topline">
+                  <span className={`status-badge status-${topic.mastery_status}`}>{topic.mastery_status.replace('_', ' ')}</span>
+                  <span className="meta-pill">{topic.source_chunk_ids.length} source chunks</span>
+                </div>
                 <div className="section-heading topic-heading">
-                  <div>
+                  <div className="topic-card-body">
                     <h3>{topic.name}</h3>
                     <p className="document-meta">
-                      importance {topic.importance} · difficulty {topic.difficulty} · {topic.source_chunk_ids.length} source chunks
+                      importance {topic.importance} · difficulty {topic.difficulty}
                     </p>
                   </div>
+                  {course && (
+                    <button type="button" className="secondary-button" onClick={() => navigateToTopicReview(course.id, topic.id)}>
+                      Review topic
+                    </button>
+                  )}
                 </div>
                 {topic.description && <p className="section-copy">{topic.description}</p>}
                 {topic.keywords.length > 0 && (
@@ -59,13 +71,6 @@ export function TopicsView({ course, topics, loading, onRefresh }: TopicsViewPro
                 )}
                 {topic.prerequisites.length > 0 && (
                   <p className="document-meta">Prerequisites: {topic.prerequisites.join(', ')}</p>
-                )}
-                {course && (
-                  <div className="result-actions">
-                    <button type="button" className="link-button" onClick={() => navigateToTopicReview(course.id, topic.id)}>
-                      Review topic
-                    </button>
-                  </div>
                 )}
               </article>
             ))}

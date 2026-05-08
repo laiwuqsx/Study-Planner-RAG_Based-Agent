@@ -199,10 +199,30 @@ class TopicReviewChunkResponse(BaseModel):
     text: str
 
 
+class PracticeQuestionResponse(BaseModel):
+    id: str
+    kind: str
+    prompt: str
+    hint: str
+    answer: str
+
+
+class TopicRecommendationResponse(BaseModel):
+    topic: TopicResponse
+    reason: str
+
+
+class TopicPracticeQuestionsResponse(BaseModel):
+    topic_id: int
+    questions: list[PracticeQuestionResponse]
+
+
 class TopicReviewResponse(BaseModel):
     topic: TopicResponse
     source_chunks: list[TopicReviewChunkResponse]
     related_topics: list[TopicResponse]
+    practice_questions: list[PracticeQuestionResponse]
+    next_topic: TopicRecommendationResponse | None
 
 
 class TopicUpdateRequest(BaseModel):
@@ -317,6 +337,10 @@ class StudyPlanResponse(BaseModel):
 
 class StudyPlanGenerateResponse(BaseModel):
     plan: StudyPlanResponse
+
+
+class StudyPlanListResponse(BaseModel):
+    plans: list[StudyPlanResponse]
 
 
 class StudyPlanItemUpdateRequest(BaseModel):

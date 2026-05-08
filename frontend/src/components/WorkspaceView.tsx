@@ -58,10 +58,14 @@ export function WorkspaceView({
     <section className="workspace-grid">
       <aside className="stack-column">
         <form className="panel form-stack" onSubmit={onCourseSubmit}>
-          <div className="section-heading">
-            <h2>{editingId ? 'Edit course' : 'Create course'}</h2>
+          <div className="page-header compact">
+            <div>
+              <p className="eyebrow">Workspace Setup</p>
+              <h2>{editingId ? 'Edit course' : 'Create course'}</h2>
+              <p className="section-copy">Define each course once, then keep materials and study flows attached to it.</p>
+            </div>
             {editingId && (
-              <button type="button" className="link-button" onClick={onCancelEdit}>
+              <button type="button" className="secondary-button" onClick={onCancelEdit}>
                 Cancel
               </button>
             )}
@@ -98,9 +102,12 @@ export function WorkspaceView({
         </form>
 
         <section className="panel">
-          <div className="section-heading">
-            <h2>Your courses</h2>
-            <button type="button" onClick={onRefreshCourses}>Refresh</button>
+          <div className="page-header compact">
+            <div>
+              <p className="eyebrow">Courses</p>
+              <h2>Your courses</h2>
+            </div>
+            <button type="button" className="secondary-button" onClick={onRefreshCourses}>Refresh</button>
           </div>
           {courses.length === 0 ? (
             <p className="empty-state">No courses yet. Create one to start organizing study materials.</p>
@@ -109,15 +116,14 @@ export function WorkspaceView({
               {courses.map((course) => (
                 <article className={`course-card ${selectedCourseId === course.id ? 'is-selected' : ''}`} key={course.id}>
                   <button type="button" className="course-select" onClick={() => onSelectCourse(course.id)}>
-                    <div>
+                    <div className="course-card-body">
                       <h3>{course.name}</h3>
                       {course.term && <p className="course-term">{course.term}</p>}
-                      {course.description && <p>{course.description}</p>}
                     </div>
                   </button>
                   <div className="card-actions">
-                    <button type="button" onClick={() => onStartEdit(course)}>Edit</button>
-                    <button type="button" className="danger" onClick={() => onDeleteCourse(course.id)}>Delete</button>
+                    <button type="button" className="secondary-button" onClick={() => onStartEdit(course)}>Edit</button>
+                    <button type="button" className="danger-button" onClick={() => onDeleteCourse(course.id)}>Delete</button>
                   </div>
                 </article>
               ))}
@@ -128,65 +134,85 @@ export function WorkspaceView({
 
       <section className="stack-column">
         <section className="panel">
-          <div className="section-heading">
+          <div className="page-header">
             <div>
               <h2>{selectedCourse ? selectedCourse.name : 'Course materials'}</h2>
               <p className="section-copy">
                 {selectedCourse
-                  ? 'Upload PDF or DOCX files and track processing progress.'
-                  : 'Select a course to start uploading materials.'}
+                  ? 'Upload course resources, monitor processing, and move into topic review, search, study plan, or chat.'
+                  : 'Select a course to start uploading materials and unlock the workspace tools.'}
               </p>
             </div>
             {selectedCourse && (
-              <div className="result-actions">
-                <button type="button" className="link-button" onClick={() => navigateToChat(selectedCourse.id)}>
+              <div className="toolbar-actions">
+                <button type="button" className="secondary-button" onClick={() => navigateToChat(selectedCourse.id)}>
                   Ask course
                 </button>
-                <button type="button" className="link-button" onClick={() => navigateToStudyPlan(selectedCourse.id)}>
+                <button type="button" className="secondary-button" onClick={() => navigateToStudyPlan(selectedCourse.id)}>
                   Study plan
                 </button>
-                <button type="button" className="link-button" onClick={() => navigateToTopics(selectedCourse.id)}>
+                <button type="button" className="secondary-button" onClick={() => navigateToTopics(selectedCourse.id)}>
                   View topics
                 </button>
-                <button type="button" className="link-button" onClick={() => navigateToSearch(selectedCourse.id)}>
+                <button type="button" className="secondary-button" onClick={() => navigateToSearch(selectedCourse.id)}>
                   Search chunks
                 </button>
               </div>
             )}
           </div>
 
-          <form className="form-stack" onSubmit={onUploadSubmit}>
-            <label>
-              Material type
-              <select value={materialType} onChange={(event) => onMaterialTypeChange(event.target.value)} disabled={!selectedCourse}>
-                {MATERIAL_TYPE_OPTIONS.map((option) => (
-                  <option value={option} key={option}>
-                    {option.replaceAll('_', ' ')}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              File
-              <input
-                id="course-upload-input"
-                type="file"
-                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={(event) => onFileChange(event.target.files?.[0] || null)}
-                disabled={!selectedCourse}
-              />
-            </label>
-            <button type="submit" disabled={loading || !selectedCourse || !selectedFile}>
-              {loading ? 'Working...' : 'Upload material'}
-            </button>
+          <div className="workspace-hero-grid">
+            <div className="hero-summary-card">
+              <span className="hero-stat-label">Selected course</span>
+              <strong>{selectedCourse ? selectedCourse.name : 'No course selected'}</strong>
+              <p>{selectedCourse?.description || 'Choose a course from the left to manage its materials and study workflows.'}</p>
+            </div>
+            <div className="hero-summary-card">
+              <span className="hero-stat-label">Materials</span>
+              <strong>{selectedCourse ? documents.length : 0}</strong>
+              <p>{selectedCourse ? 'Uploaded documents currently attached to this course.' : 'Materials will appear once a course is selected.'}</p>
+            </div>
+          </div>
+
+          <form className="form-stack workspace-upload-form" onSubmit={onUploadSubmit}>
+            <div className="inline-form-grid">
+              <label>
+                Material type
+                <select value={materialType} onChange={(event) => onMaterialTypeChange(event.target.value)} disabled={!selectedCourse}>
+                  {MATERIAL_TYPE_OPTIONS.map((option) => (
+                    <option value={option} key={option}>
+                      {option.replaceAll('_', ' ')}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                File
+                <input
+                  id="course-upload-input"
+                  type="file"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(event) => onFileChange(event.target.files?.[0] || null)}
+                  disabled={!selectedCourse}
+                />
+              </label>
+            </div>
+            <div className="toolbar-actions">
+              <button type="submit" disabled={loading || !selectedCourse || !selectedFile}>
+                {loading ? 'Working...' : 'Upload material'}
+              </button>
+            </div>
           </form>
         </section>
 
         {activeJob && (
           <section className="panel">
-            <div className="section-heading">
-              <h2>Processing job #{activeJob.id}</h2>
-              <span className={`status-badge status-${activeJob.status}`}>{activeJob.status}</span>
+            <div className="page-header compact">
+              <div>
+                <p className="eyebrow">Processing</p>
+                <h2>Job #{activeJob.id}</h2>
+              </div>
+              <span className={`status-badge status-${activeJob.status}`}>{activeJob.status.replace('_', ' ')}</span>
             </div>
             <p className="section-copy">{activeJob.error || activeJob.message}</p>
             <div className="step-list">
@@ -201,9 +227,12 @@ export function WorkspaceView({
         )}
 
         <section className="panel">
-          <div className="section-heading">
-            <h2>Uploaded materials</h2>
-            {selectedCourse && <button type="button" onClick={onRefreshDocuments}>Refresh</button>}
+          <div className="page-header compact">
+            <div>
+              <p className="eyebrow">Library</p>
+              <h2>Uploaded materials</h2>
+            </div>
+            {selectedCourse && <button type="button" className="secondary-button" onClick={onRefreshDocuments}>Refresh</button>}
           </div>
           {!selectedCourse ? (
             <p className="empty-state">Select a course to view its materials.</p>
@@ -222,15 +251,15 @@ export function WorkspaceView({
                     <p className="document-meta">Updated {formatDate(document.updated_at)}</p>
                   </div>
                   <div className="document-actions">
-                    <span className={`status-badge status-${document.status}`}>{document.status}</span>
+                    <span className={`status-badge status-${document.status}`}>{document.status.replace('_', ' ')}</span>
                     <button
                       type="button"
-                      className="link-button"
+                      className="secondary-button"
                       onClick={() => selectedCourse && navigateToDocumentChunks(selectedCourse.id, document.id)}
                     >
                       View chunks
                     </button>
-                    <button type="button" className="danger" onClick={() => onDeleteDocument(document)}>Delete</button>
+                    <button type="button" className="danger-button" onClick={() => onDeleteDocument(document)}>Delete</button>
                   </div>
                 </article>
               ))}

@@ -5,20 +5,35 @@ import { Course, StudyPlan, StudyPlanGenerateInput } from '../types';
 
 type StudyPlanViewProps = {
   course: Course | null;
-  plan: StudyPlan | null;
+  plans: StudyPlan[];
+  activePlanId: number | null;
   loading: boolean;
   form: StudyPlanGenerateInput;
   onFormChange: (next: StudyPlanGenerateInput) => void;
   onGenerate: (event: FormEvent) => void;
   onRegenerate: () => void;
+  onSelectPlan: (planId: number) => void;
+  onDeletePlan: (planId: number) => void;
   onItemStatusChange: (itemId: number, status: 'pending' | 'in_progress' | 'completed') => void;
 };
 
-export function StudyPlanView({ course, plan, loading, form, onFormChange, onGenerate, onRegenerate, onItemStatusChange }: StudyPlanViewProps) {
+export function StudyPlanView({
+  course,
+  plans,
+  activePlanId,
+  loading,
+  form,
+  onFormChange,
+  onGenerate,
+  onRegenerate,
+  onSelectPlan,
+  onDeletePlan,
+  onItemStatusChange,
+}: StudyPlanViewProps) {
   return (
     <section className="chunk-page">
       <section className="panel">
-        <div className="section-heading">
+        <div className="page-header">
           <div>
             <p className="eyebrow">Study Plan</p>
             <h2>{course ? course.name : 'Study plan'}</h2>
@@ -26,7 +41,7 @@ export function StudyPlanView({ course, plan, loading, form, onFormChange, onGen
               Generate a topic-level plan from the current course topics and a small amount of representative context.
             </p>
           </div>
-          <button type="button" className="link-button" onClick={navigateToWorkspace}>
+          <button type="button" className="secondary-button" onClick={navigateToWorkspace}>
             Back to workspace
           </button>
         </div>
@@ -73,9 +88,9 @@ export function StudyPlanView({ course, plan, loading, form, onFormChange, onGen
           </label>
           <div className="result-actions plan-actions">
             <button type="submit" disabled={loading}>
-              {loading ? 'Generating...' : plan ? 'Generate new plan' : 'Generate plan'}
+              {loading ? 'Generating...' : plans.length > 0 ? 'Generate new plan' : 'Generate plan'}
             </button>
-            {plan && (
+            {plans.length > 0 && (
               <button type="button" className="link-button" onClick={onRegenerate} disabled={loading}>
                 {loading ? 'Working...' : 'Regenerate'}
               </button>
@@ -85,96 +100,128 @@ export function StudyPlanView({ course, plan, loading, form, onFormChange, onGen
       </section>
 
       <section className="panel">
-        <div className="section-heading">
+        <div className="page-header compact">
           <div>
-            <h2>{plan ? plan.title : 'Current plan'}</h2>
-            {plan && (
-              <p className="document-meta">
-                {plan.generation_mode} plan · {plan.completed_item_count}/{plan.item_count} completed
-              </p>
-            )}
+            <h2>{plans.length > 0 ? 'Saved plans' : 'Current plan'}</h2>
+            {plans.length > 0 && <p className="document-meta">Click a plan to expand or collapse its steps.</p>}
           </div>
         </div>
 
-        {!plan ? (
+        {plans.length === 0 ? (
           <p className="empty-state">No study plan yet. Generate one from the current course topics.</p>
         ) : (
-          <div className="plan-layout">
-            <section className="plan-summary-card">
-              <p className="section-copy">{plan.summary}</p>
-            </section>
-
-            <div className="plan-item-list">
-              {plan.items.map((item) => (
-                <article className="plan-item-card" key={item.id}>
-                  <div className="section-heading topic-heading">
+          <div className="plan-accordion-list">
+            {plans.map((plan) => {
+              const isActive = plan.id === activePlanId;
+              return (
+                <article className={`plan-accordion-card ${isActive ? 'is-active' : ''}`} key={plan.id}>
+                  <button type="button" className="plan-accordion-toggle" onClick={() => onSelectPlan(plan.id)}>
                     <div>
-                      <p className="plan-order">Step {item.order_index}</p>
-                      <h3>{item.title}</h3>
+                      <div className="badge-row">
+                        <span className="meta-pill">{plan.generation_mode} plan</span>
+                      </div>
+                      <h3>{plan.title}</h3>
                       <p className="document-meta">
-                        {item.estimated_effort_minutes} min · importance {item.importance} · difficulty {item.difficulty} · {item.status.replace('_', ' ')}
+                        {plan.completed_item_count}/{plan.item_count} completed · {new Date(plan.created_at).toLocaleString()}
                       </p>
                     </div>
-                  </div>
-                  {item.notes && <p className="section-copy">{item.notes}</p>}
-                  {item.focus_points.length > 0 && (
-                    <div className="tag-list">
-                      {item.focus_points.map((point) => (
-                        <span className="tag-chip" key={point}>
-                          {point}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {item.context_snippets.length > 0 && (
-                    <div className="plan-snippets">
-                      {item.context_snippets.map((snippet, index) => (
-                        <p className="plan-snippet" key={`${item.id}-${index}`}>
-                          {snippet}
-                        </p>
-                      ))}
-                    </div>
-                  )}
-                  {course && (
-                    <div className="result-actions">
-                      {item.status !== 'in_progress' && (
-                        <button
-                          type="button"
-                          className="link-button"
-                          onClick={() => onItemStatusChange(item.id, 'in_progress')}
-                        >
-                          Start
+                    <span className="plan-accordion-chevron" aria-hidden="true">{isActive ? '−' : '+'}</span>
+                  </button>
+                  {isActive && (
+                    <div className="plan-accordion-content">
+                      <section className="plan-summary-card">
+                        <div className="badge-row">
+                          <span className="meta-pill">{plan.item_count} tasks</span>
+                          <span className="meta-pill">{plan.completed_item_count} completed</span>
+                        </div>
+                        <p className="section-copy">{plan.summary}</p>
+                      </section>
+
+                      <div className="plan-item-list">
+                        {plan.items.map((item) => (
+                          <article className="plan-item-card" key={item.id}>
+                            <div className="card-topline">
+                              <p className="plan-order">Step {item.order_index}</p>
+                              <span className={`status-badge status-${item.status}`}>{item.status.replace('_', ' ')}</span>
+                            </div>
+                            <div className="section-heading topic-heading">
+                              <div>
+                                <h3>{item.title}</h3>
+                                <p className="document-meta">
+                                  {item.estimated_effort_minutes} min · importance {item.importance} · difficulty {item.difficulty}
+                                </p>
+                              </div>
+                            </div>
+                            {item.notes && <p className="section-copy">{item.notes}</p>}
+                            {item.focus_points.length > 0 && (
+                              <div className="tag-list">
+                                {item.focus_points.map((point) => (
+                                  <span className="tag-chip" key={point}>
+                                    {point}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {item.context_snippets.length > 0 && (
+                              <div className="plan-snippets">
+                                {item.context_snippets.map((snippet, index) => (
+                                  <p className="plan-snippet" key={`${item.id}-${index}`}>
+                                    {snippet}
+                                  </p>
+                                ))}
+                              </div>
+                            )}
+                            {course && (
+                              <div className="result-actions">
+                                {item.status !== 'in_progress' && (
+                                  <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={() => onItemStatusChange(item.id, 'in_progress')}
+                                  >
+                                    Start
+                                  </button>
+                                )}
+                                {item.status !== 'completed' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => onItemStatusChange(item.id, 'completed')}
+                                  >
+                                    Complete
+                                  </button>
+                                )}
+                                {item.status !== 'pending' && (
+                                  <button
+                                    type="button"
+                                    className="secondary-button"
+                                    onClick={() => onItemStatusChange(item.id, 'pending')}
+                                  >
+                                    Reset
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  className="secondary-button"
+                                  onClick={() => navigateToTopicReview(course.id, item.topic_id, 'study-plan')}
+                                >
+                                  Review topic
+                                </button>
+                              </div>
+                            )}
+                          </article>
+                        ))}
+                      </div>
+
+                      <div className="plan-accordion-actions">
+                        <button type="button" className="danger-button" onClick={() => onDeletePlan(plan.id)}>
+                          Delete plan
                         </button>
-                      )}
-                      {item.status !== 'completed' && (
-                        <button
-                          type="button"
-                          onClick={() => onItemStatusChange(item.id, 'completed')}
-                        >
-                          Complete
-                        </button>
-                      )}
-                      {item.status !== 'pending' && (
-                        <button
-                          type="button"
-                          className="link-button"
-                          onClick={() => onItemStatusChange(item.id, 'pending')}
-                        >
-                          Reset
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="link-button"
-                        onClick={() => navigateToTopicReview(course.id, item.topic_id)}
-                      >
-                        Review topic
-                      </button>
+                      </div>
                     </div>
                   )}
                 </article>
-              ))}
-            </div>
+              );
+            })}
           </div>
         )}
       </section>

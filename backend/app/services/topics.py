@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from backend.app.config import CHAT_API_KEY, TOPIC_EXTRACTION_MODE
 from backend.app.models import ChildChunk, Course, Document, DocumentTopic, ParentChunk, StudyPlanItem, Topic, TopicSource
-from backend.app.services.llm_chat import ChatProviderError, run_chat_completion
+from backend.app.services.llm_chat import ChatProviderError, run_chat_completion, should_use_llm
 
 STOPWORDS = {
     "a",
@@ -116,6 +116,8 @@ def get_topic_review_payload(db: Session, *, topic: Topic) -> dict:
     source_chunk_ids = json.loads(topic.source_chunk_ids_json or "[]")
     chunks = _load_topic_source_chunks(db, topic=topic, source_chunk_ids=source_chunk_ids)
     related_topics = _find_related_topics(db, topic=topic)
+    practice_questions = generate_topic_practice_questions(db, topic=topic, source_chunks=chunks)
+    next_topic = _recommend_next_topic(db, topic=topic, related_topics=related_topics)
     return {
         "topic": serialize_topic(topic),
         "source_chunks": [
@@ -131,6 +133,8 @@ def get_topic_review_payload(db: Session, *, topic: Topic) -> dict:
             for chunk in chunks
         ],
         "related_topics": [serialize_topic(item) for item in related_topics],
+        "practice_questions": practice_questions,
+        "next_topic": next_topic,
     }
 
 
@@ -314,6 +318,25 @@ def serialize_topic(topic: Topic) -> dict:
         "created_at": topic.created_at,
         "updated_at": topic.updated_at,
     }
+
+
+def generate_topic_practice_questions(
+    db: Session,
+    *,
+    topic: Topic,
+    source_chunks: list[ChildChunk] | None = None,
+) -> list[dict]:
+    chunks = source_chunks if source_chunks is not None else _load_topic_source_chunks(
+        db,
+        topic=topic,
+        source_chunk_ids=json.loads(topic.source_chunk_ids_json or "[]"),
+    )
+    if should_use_llm():
+        try:
+            return _generate_topic_practice_questions_with_llm(topic=topic, source_chunks=chunks)
+        except ChatProviderError:
+            pass
+    return _build_rule_practice_questions(topic=topic, source_chunks=chunks)
 
 
 def normalize_topic_name(value: str) -> str:
@@ -552,6 +575,34 @@ def _find_related_topics(db: Session, *, topic: Topic) -> list[Topic]:
     return [item[1] for item in scored[:3]]
 
 
+def _recommend_next_topic(db: Session, *, topic: Topic, related_topics: list[Topic]) -> dict | None:
+    for candidate in related_topics:
+        if candidate.mastery_status != "mastered":
+            return {
+                "topic": serialize_topic(candidate),
+                "reason": "This topic is closely connected to the current one and is not mastered yet.",
+            }
+
+    remaining_topics = list_course_topics(db, user_id=topic.user_id, course_id=topic.course_id)
+    candidates = [item for item in remaining_topics if item.id != topic.id and item.mastery_status != "mastered" and item.status == "active"]
+    if not candidates:
+        return None
+
+    candidates.sort(
+        key=lambda item: (
+            0 if item.mastery_status == "reviewing" else 1,
+            -item.importance,
+            item.difficulty,
+            item.name.lower(),
+        )
+    )
+    next_topic = candidates[0]
+    return {
+        "topic": serialize_topic(next_topic),
+        "reason": "This is the strongest remaining active topic to review next based on priority and progress.",
+    }
+
+
 def _extract_topics_from_candidates(candidates: list[dict]) -> list[dict]:
     topics_by_name: dict[str, dict] = {}
     for candidate in candidates:
@@ -579,6 +630,127 @@ def _extract_topics_from_candidates(candidates: list[dict]) -> list[dict]:
         if len(candidate["summary_text"]) > len(entry["description"]):
             entry["description"] = _sanitize_description(candidate["summary_text"])
     return _normalize_topics_payload(list(topics_by_name.values()))
+
+
+def _generate_topic_practice_questions_with_llm(*, topic: Topic, source_chunks: list[ChildChunk]) -> list[dict]:
+    source_lines = []
+    for index, chunk in enumerate(source_chunks[:4], start=1):
+        source_lines.append(
+            {
+                "source_id": index,
+                "filename": chunk.filename,
+                "section_title": chunk.section_title,
+                "page_number": chunk.page_number,
+                "text": " ".join(chunk.text.split())[:420],
+            }
+        )
+    prompt = json.dumps(
+        {
+            "task": "Generate a compact practice set for one course topic. Return JSON only.",
+            "topic": {
+                "name": topic.name,
+                "description": topic.description,
+                "keywords": json.loads(topic.keywords_json or "[]"),
+                "importance": topic.importance,
+                "difficulty": topic.difficulty,
+            },
+            "requirements": [
+                "Return exactly 3 questions.",
+                "Include a mix of conceptual understanding and example-style reasoning when the material supports it.",
+                "Keep each prompt answerable from the supplied topic description and sources.",
+                "Do not invent course-specific facts that are not supported by the sources.",
+                "Make hints short and useful.",
+                "Make answers concise and study-oriented.",
+            ],
+            "output_schema": {
+                "questions": [
+                    {
+                        "kind": "concept | application | example",
+                        "prompt": "question text",
+                        "hint": "short hint",
+                        "answer": "short answer or expected reasoning",
+                    }
+                ]
+            },
+            "sources": source_lines,
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+    response = run_chat_completion(
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You create practice questions for students reviewing one course topic. "
+                    "Use the supplied course topic and source snippets only. "
+                    "Return JSON only."
+                ),
+            },
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.3,
+        max_tokens=900,
+    )
+    payload = _parse_json_object(response)
+    raw_questions = payload.get("questions")
+    if not isinstance(raw_questions, list) or not raw_questions:
+        raise ChatProviderError("Practice question generator did not return questions")
+
+    questions: list[dict] = []
+    for index, item in enumerate(raw_questions[:3], start=1):
+        prompt_text = " ".join(str(item.get("prompt", "")).split()).strip()
+        if not prompt_text:
+            continue
+        questions.append(
+            {
+                "id": f"{topic.id}-practice-{index}",
+                "kind": _normalize_question_kind(item.get("kind")),
+                "prompt": prompt_text,
+                "hint": " ".join(str(item.get("hint", "")).split()).strip(),
+                "answer": " ".join(str(item.get("answer", "")).split()).strip(),
+            }
+        )
+    if not questions:
+        raise ChatProviderError("Practice question generator returned empty prompts")
+    return questions
+
+
+def _build_rule_practice_questions(*, topic: Topic, source_chunks: list[ChildChunk]) -> list[dict]:
+    snippets = _pick_context_snippets(source_chunks)
+    keywords = json.loads(topic.keywords_json or "[]")
+    primary_keyword = keywords[0] if keywords else topic.name
+    secondary_keyword = keywords[1] if len(keywords) > 1 else ""
+    description = topic.description.strip() or (snippets[0] if snippets else f"Explain the main idea behind {topic.name}.")
+    questions = [
+        {
+            "id": f"{topic.id}-practice-1",
+            "kind": "concept",
+            "prompt": f"In your own words, explain the core idea behind {topic.name}.",
+            "hint": f"Use the topic description and define why {primary_keyword} matters in this topic.",
+            "answer": description[:320],
+        },
+        {
+            "id": f"{topic.id}-practice-2",
+            "kind": "application",
+            "prompt": (
+                f"What would you look for when deciding whether a problem or example is really about {topic.name}?"
+            ),
+            "hint": "Mention the signals, terminology, or reasoning patterns that appear in the supporting material.",
+            "answer": _build_application_answer(topic=topic, snippets=snippets, keywords=keywords),
+        },
+        {
+            "id": f"{topic.id}-practice-3",
+            "kind": "example",
+            "prompt": (
+                f"Create a small example or scenario involving {topic.name}"
+                f"{f' and {secondary_keyword}' if secondary_keyword else ''}, then describe how you would reason through it."
+            ),
+            "hint": "Keep the example simple and align it with the retrieved course context.",
+            "answer": _build_example_answer(topic=topic, snippets=snippets),
+        },
+    ]
+    return questions
 
 
 def _plan_document_topic_operations_with_llm(*, course: Course, existing_topics: list[dict], candidates: list[dict]) -> list[dict]:
@@ -1140,6 +1312,40 @@ def _looks_like_numeric_example(value: str) -> bool:
 def _sanitize_description(value: str) -> str:
     cleaned = " ".join(value.split())
     return cleaned[:260]
+
+
+def _normalize_question_kind(value) -> str:
+    kind = " ".join(str(value or "").strip().lower().split())
+    if kind in {"concept", "application", "example"}:
+        return kind
+    return "concept"
+
+
+def _build_application_answer(*, topic: Topic, snippets: list[str], keywords: list[str]) -> str:
+    topic_label = topic.name
+    keyword_text = ", ".join(keywords[:3]) if keywords else topic_label
+    if snippets:
+        return (
+            f"Look for reasoning patterns, terminology, or constraints that repeatedly point back to {topic_label}. "
+            f"In this course material, useful signals include {keyword_text}. "
+            f"Use the supporting examples and definitions to justify why the scenario belongs to this topic."
+        )[:420]
+    return (
+        f"A strong answer should identify the core signals that make a problem belong to {topic_label}, "
+        f"then explain how those signals affect the reasoning approach."
+    )[:420]
+
+
+def _build_example_answer(*, topic: Topic, snippets: list[str]) -> str:
+    if snippets:
+        return (
+            f"Start with a minimal scenario that matches the supporting material for {topic.name}. "
+            f"Then walk through the example step by step using the same concepts emphasized in the course notes. "
+            f"Anchor your reasoning to this idea: {snippets[0]}"
+        )[:420]
+    return (
+        f"Build a simple example for {topic.name}, describe the important setup, and then explain how you would reason through it using the topic's key concepts."
+    )[:420]
 
 
 def _clamp_score(value, *, default: int) -> int:

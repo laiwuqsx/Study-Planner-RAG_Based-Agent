@@ -27,7 +27,7 @@ export function SearchView({
   return (
     <section className="chunk-page">
       <section className="panel">
-        <div className="section-heading">
+        <div className="page-header">
           <div>
             <p className="eyebrow">Course Search</p>
             <h2>{course ? course.name : 'Search materials'}</h2>
@@ -35,7 +35,7 @@ export function SearchView({
               Search child chunks inside one course with keyword, vector, or hybrid retrieval.
             </p>
           </div>
-          <button type="button" className="link-button" onClick={navigateToWorkspace}>Back to workspace</button>
+          <button type="button" className="secondary-button" onClick={navigateToWorkspace}>Back to workspace</button>
         </div>
         <form className="search-form" onSubmit={onSubmit}>
           <input
@@ -55,8 +55,11 @@ export function SearchView({
       </section>
 
       <section className="panel">
-        <div className="section-heading">
-          <h2>Results</h2>
+        <div className="page-header compact">
+          <div>
+            <p className="eyebrow">Results</p>
+            <h2>Matched chunks</h2>
+          </div>
         </div>
         {results.length === 0 ? (
           <p className="empty-state">No results yet. Run a query to search the indexed child chunks.</p>
@@ -74,7 +77,7 @@ export function SearchView({
                 <div className="result-actions">
                   <button
                     type="button"
-                    className="link-button"
+                    className="secondary-button"
                     onClick={() => course && navigateToDocumentChunks(course.id, result.document_id)}
                   >
                     Open source chunks

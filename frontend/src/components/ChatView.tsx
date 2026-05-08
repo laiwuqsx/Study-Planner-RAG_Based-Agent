@@ -43,15 +43,16 @@ export function ChatView({
   }
 
   return (
-    <section className="workspace-grid">
+    <section className="workspace-grid chat-layout">
       <aside className="stack-column">
         <section className="panel">
-          <div className="section-heading">
+          <div className="page-header compact">
             <div>
               <p className="eyebrow">Course Chat</p>
               <h2>{course ? course.name : 'Chat'}</h2>
+              <p className="section-copy">Ask grounded questions against course materials and keep a saved session history.</p>
             </div>
-            <button type="button" className="link-button" onClick={navigateToWorkspace}>
+            <button type="button" className="secondary-button" onClick={navigateToWorkspace}>
               Back
             </button>
           </div>
@@ -61,20 +62,26 @@ export function ChatView({
         </section>
 
         <section className="panel">
-          <div className="section-heading">
-            <h2>Sessions</h2>
+          <div className="page-header compact">
+            <div>
+              <p className="eyebrow">History</p>
+              <h2>Sessions</h2>
+            </div>
           </div>
           {sessions.length === 0 ? (
             <p className="empty-state">No saved sessions yet.</p>
           ) : (
             <div className="course-list">
               {sessions.map((session) => (
-                <article className={`course-card ${activeSessionId === session.id ? 'is-selected' : ''}`} key={session.id}>
-                  <button type="button" className="course-select" onClick={() => onSelectSession(session.id)}>
-                    <h3>{session.title}</h3>
+                <article className={`course-card chat-session-card ${activeSessionId === session.id ? 'is-selected' : ''}`} key={session.id}>
+                  <button type="button" className="course-select chat-session-select" onClick={() => onSelectSession(session.id)}>
+                    <div className="course-card-body chat-session-body">
+                      <h3>{session.title}</h3>
+                      <p className="document-meta">Saved conversation</p>
+                    </div>
                   </button>
-                  <div className="card-actions">
-                    <button type="button" className="danger" onClick={() => onDeleteSession(session.id)}>Delete</button>
+                  <div className="card-actions chat-session-actions">
+                    <button type="button" className="danger-button" onClick={() => onDeleteSession(session.id)}>Delete</button>
                   </div>
                 </article>
               ))}
@@ -85,7 +92,7 @@ export function ChatView({
 
       <section className="stack-column">
         <section className="panel">
-          <div className="section-heading">
+          <div className="page-header compact">
             <div>
               <h2>Ask course material</h2>
               <p className="section-copy">Latest question stays on top. Answers cite retrieved sources from this course only.</p>
@@ -111,8 +118,11 @@ export function ChatView({
         </section>
 
         <section className="panel">
-          <div className="section-heading">
-            <h2>Conversation</h2>
+          <div className="page-header compact">
+            <div>
+              <p className="eyebrow">Transcript</p>
+              <h2>Conversation</h2>
+            </div>
           </div>
           {turns.length === 0 ? (
             <p className="empty-state">Ask a question to retrieve relevant course chunks and generate a sourced answer.</p>

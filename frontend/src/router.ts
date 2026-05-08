@@ -93,7 +93,8 @@ export function navigateToDocumentChunks(courseId: number, documentId: number) {
   window.dispatchEvent(new PopStateEvent('popstate'));
 }
 
-export function navigateToTopicReview(courseId: number, topicId: number) {
-  window.history.pushState({}, '', `/courses/${courseId}/topics/${topicId}/review`);
+export function navigateToTopicReview(courseId: number, topicId: number, from?: 'study-plan' | 'topics') {
+  const query = from ? `?from=${encodeURIComponent(from)}` : '';
+  window.history.pushState({}, '', `/courses/${courseId}/topics/${topicId}/review${query}`);
   window.dispatchEvent(new PopStateEvent('popstate'));
 }

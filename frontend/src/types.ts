@@ -145,10 +145,25 @@ export type TopicReviewChunk = {
   text: string;
 };
 
+export type PracticeQuestion = {
+  id: string;
+  kind: string;
+  prompt: string;
+  hint: string;
+  answer: string;
+};
+
+export type TopicRecommendation = {
+  topic: Topic;
+  reason: string;
+};
+
 export type TopicReview = {
   topic: Topic;
   source_chunks: TopicReviewChunk[];
   related_topics: Topic[];
+  practice_questions: PracticeQuestion[];
+  next_topic: TopicRecommendation | null;
 };
 
 export type StudyPlanItem = {
@@ -182,6 +197,10 @@ export type StudyPlan = {
   created_at: string;
   updated_at: string;
   items: StudyPlanItem[];
+};
+
+export type StudyPlanListResponse = {
+  plans: StudyPlan[];
 };
 
 export type StudyPlanGenerateInput = {

@@ -43,7 +43,7 @@ export function DocumentChunksView({
   return (
     <section className="chunk-page">
       <section className="panel">
-        <div className="section-heading">
+        <div className="page-header">
           <div>
             <p className="eyebrow">Chunk Inspector</p>
             <h2>{document?.filename || 'Document chunks'}</h2>
@@ -51,7 +51,7 @@ export function DocumentChunksView({
               {course ? `${course.name}${course.term ? ` · ${course.term}` : ''}` : 'Selected course material'}
             </p>
           </div>
-          <button type="button" className="link-button" onClick={onBack}>Back to materials</button>
+          <button type="button" className="secondary-button" onClick={onBack}>Back to materials</button>
         </div>
       </section>
 
@@ -62,8 +62,13 @@ export function DocumentChunksView({
           <p className="empty-state">Chunk details are not available for this material.</p>
         ) : (
           <div className="chunk-layout">
-            <div>
-              <h3>Parent chunks</h3>
+            <div className="subsection-card">
+              <div className="page-header compact">
+                <div>
+                  <p className="eyebrow">Hierarchy</p>
+                  <h3>Parent chunks</h3>
+                </div>
+              </div>
               <div className="chunk-list">
                 {chunkSummary.parent_chunks.map((chunk: ParentChunk) => (
                   <ChunkCard
@@ -77,8 +82,13 @@ export function DocumentChunksView({
                 ))}
               </div>
             </div>
-            <div>
-              <h3>Child chunks</h3>
+            <div className="subsection-card">
+              <div className="page-header compact">
+                <div>
+                  <p className="eyebrow">Retrieval Units</p>
+                  <h3>Child chunks</h3>
+                </div>
+              </div>
               <div className="chunk-list">
                 {chunkSummary.child_chunks.map((chunk: ChildChunk) => (
                   <ChunkCard

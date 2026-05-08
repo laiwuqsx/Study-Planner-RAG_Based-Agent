@@ -1,18 +1,21 @@
-import { FormEvent } from 'react';
+import { FormEvent, useRef } from 'react';
 
-import { navigateToDocumentChunks, navigateToTopics, navigateToTopicReview } from '../router';
+import { navigateToDocumentChunks, navigateToStudyPlan, navigateToTopics, navigateToTopicReview } from '../router';
 import { ChatMessage, Course, TopicReview } from '../types';
 
 type TopicReviewViewProps = {
   course: Course | null;
   review: TopicReview | null;
   loading: boolean;
+  practiceLoading: boolean;
+  backTarget: 'topics' | 'study-plan';
   chatQuery: string;
   chatLoading: boolean;
   chatMessages: ChatMessage[];
   onChatQueryChange: (value: string) => void;
   onChatSubmit: (event: FormEvent) => void;
   onMasteryChange: (status: 'not_started' | 'reviewing' | 'mastered') => void;
+  onRefreshPracticeQuestions: () => void;
 };
 
 function stripTopicPromptPrefix(content: string) {
@@ -23,13 +26,18 @@ export function TopicReviewView({
   course,
   review,
   loading,
+  practiceLoading,
+  backTarget,
   chatQuery,
   chatLoading,
   chatMessages,
   onChatQueryChange,
   onChatSubmit,
   onMasteryChange,
+  onRefreshPracticeQuestions,
 }: TopicReviewViewProps) {
+  const chatSectionRef = useRef<HTMLElement | null>(null);
+  const chatInputRef = useRef<HTMLInputElement | null>(null);
   const topic = review?.topic ?? null;
   const turns = [];
   for (let index = 0; index < chatMessages.length; index += 1) {
@@ -39,10 +47,17 @@ export function TopicReviewView({
     turns.push({ user: message, assistant });
   }
 
+  function focusTopicChatComposer() {
+    chatSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    window.setTimeout(() => {
+      chatInputRef.current?.focus();
+    }, 220);
+  }
+
   return (
     <section className="chunk-page">
       <section className="panel">
-        <div className="section-heading">
+        <div className="page-header">
           <div>
             <p className="eyebrow">Topic Review</p>
             <h2>{topic?.name || 'Topic review'}</h2>
@@ -50,10 +65,14 @@ export function TopicReviewView({
               {course ? `${course.name}${course.term ? ` · ${course.term}` : ''}` : 'Selected course topic'}
             </p>
           </div>
-          <div className="result-actions">
+          <div className="toolbar-actions">
             {course && (
-              <button type="button" className="link-button" onClick={() => navigateToTopics(course.id)}>
-                Back to topics
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => (backTarget === 'study-plan' ? navigateToStudyPlan(course.id) : navigateToTopics(course.id))}
+              >
+                {backTarget === 'study-plan' ? 'Back to plan' : 'Back to topics'}
               </button>
             )}
           </div>
@@ -71,11 +90,22 @@ export function TopicReviewView({
       ) : (
         <>
           <section className="panel">
-            <div className="section-heading">
-              <h2>Overview</h2>
-              <p className="document-meta">
-                importance {topic.importance} · difficulty {topic.difficulty} · {review.source_chunks.length} supporting chunks · {topic.mastery_status.replace('_', ' ')}
-              </p>
+            <div className="page-header compact">
+              <div>
+                <p className="eyebrow">Overview</p>
+                <h2>Study snapshot</h2>
+              </div>
+              <div className="snapshot-actions">
+                <div className="badge-row">
+                  <span className={`status-badge status-${topic.mastery_status}`}>{topic.mastery_status.replace('_', ' ')}</span>
+                  <span className="meta-pill">importance {topic.importance}</span>
+                  <span className="meta-pill">difficulty {topic.difficulty}</span>
+                  <span className="meta-pill">{review.source_chunks.length} supporting chunks</span>
+                </div>
+                <button type="button" onClick={focusTopicChatComposer}>
+                  Ask AI about this topic
+                </button>
+              </div>
             </div>
             {topic.description && <p className="section-copy">{topic.description}</p>}
             {topic.keywords.length > 0 && (
@@ -89,7 +119,7 @@ export function TopicReviewView({
             )}
             <div className="result-actions">
               {topic.mastery_status !== 'reviewing' && (
-                <button type="button" className="link-button" onClick={() => onMasteryChange('reviewing')}>
+                <button type="button" className="secondary-button" onClick={() => onMasteryChange('reviewing')}>
                   Mark reviewing
                 </button>
               )}
@@ -99,7 +129,7 @@ export function TopicReviewView({
                 </button>
               )}
               {topic.mastery_status !== 'not_started' && (
-                <button type="button" className="link-button" onClick={() => onMasteryChange('not_started')}>
+                <button type="button" className="secondary-button" onClick={() => onMasteryChange('not_started')}>
                   Reset status
                 </button>
               )}
@@ -110,8 +140,43 @@ export function TopicReviewView({
           </section>
 
           <section className="panel">
-            <div className="section-heading">
-              <h2>Source Chunks</h2>
+            <div className="page-header compact">
+              <div>
+                <p className="eyebrow">Practice</p>
+                <h2>Practice questions</h2>
+                <p className="section-copy">Use these prompts to check understanding before moving on.</p>
+              </div>
+              <div className="toolbar-actions">
+                <button type="button" className="secondary-button" onClick={onRefreshPracticeQuestions} disabled={practiceLoading}>
+                  {practiceLoading ? 'Refreshing...' : 'Regenerate practice set'}
+                </button>
+              </div>
+            </div>
+            {review.practice_questions.length === 0 ? (
+              <p className="empty-state">No practice questions available for this topic yet.</p>
+            ) : (
+              <div className="practice-question-list">
+                {review.practice_questions.map((question, index) => (
+                  <article className="practice-question-card" key={question.id}>
+                    <div className="card-topline">
+                      <span className="meta-pill">Question {index + 1}</span>
+                      <span className="status-badge status-reviewing">{question.kind}</span>
+                    </div>
+                    <h3>{question.prompt}</h3>
+                    {question.hint && <p className="section-copy"><strong>Hint:</strong> {question.hint}</p>}
+                    {question.answer && <p className="document-meta"><strong>Expected answer:</strong> {question.answer}</p>}
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="panel">
+            <div className="page-header compact">
+              <div>
+                <p className="eyebrow">Evidence</p>
+                <h2>Source chunks</h2>
+              </div>
               <p className="section-copy">These are the chunks currently supporting this topic.</p>
             </div>
             <div className="chunk-list">
@@ -127,7 +192,7 @@ export function TopicReviewView({
                     {course && (
                       <button
                         type="button"
-                        className="link-button"
+                        className="secondary-button"
                         onClick={() => navigateToDocumentChunks(course.id, chunk.document_id)}
                       >
                         Open full document chunks
@@ -139,16 +204,18 @@ export function TopicReviewView({
             </div>
           </section>
 
-          <section className="panel">
-            <div className="section-heading">
+          <section className="panel" ref={chatSectionRef}>
+            <div className="page-header compact">
               <div>
-                <h2>Ask This Topic</h2>
+                <p className="eyebrow">Guided Q&amp;A</p>
+                <h2>Ask this topic</h2>
                 <p className="section-copy">Ask follow-up questions while staying anchored to this topic and the course materials.</p>
               </div>
             </div>
             <form className="form-stack" onSubmit={onChatSubmit}>
               <div className="topic-chat-form">
                 <input
+                  ref={chatInputRef}
                   value={chatQuery}
                   onChange={(event) => onChatQueryChange(event.target.value)}
                   placeholder={topic ? `Ask about ${topic.name}` : 'Ask about this topic'}
@@ -195,9 +262,26 @@ export function TopicReviewView({
           </section>
 
           <section className="panel">
-            <div className="section-heading">
-              <h2>Related Topics</h2>
+            <div className="page-header compact">
+              <div>
+                <p className="eyebrow">Connections</p>
+                <h2>Related topics</h2>
+              </div>
             </div>
+            {review.next_topic && course && (
+              <article className="topic-card next-topic-card">
+                <div className="section-heading topic-heading">
+                  <div>
+                    <p className="eyebrow">Recommended next</p>
+                    <h3>{review.next_topic.topic.name}</h3>
+                    <p className="section-copy">{review.next_topic.reason}</p>
+                  </div>
+                  <button type="button" onClick={() => navigateToTopicReview(course.id, review.next_topic!.topic.id)}>
+                    Review next topic
+                  </button>
+                </div>
+              </article>
+            )}
             {review.related_topics.length === 0 ? (
               <p className="empty-state">No closely related topics yet.</p>
             ) : (
@@ -212,7 +296,7 @@ export function TopicReviewView({
                         </p>
                       </div>
                       {course && (
-                        <button type="button" className="link-button" onClick={() => navigateToTopicReview(course.id, relatedTopic.id)}>
+                        <button type="button" className="secondary-button" onClick={() => navigateToTopicReview(course.id, relatedTopic.id)}>
                           Review
                         </button>
                       )}
