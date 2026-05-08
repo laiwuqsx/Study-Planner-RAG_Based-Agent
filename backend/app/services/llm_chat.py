@@ -26,10 +26,13 @@ def generate_grounded_answer(*, question: str, results: list[dict]) -> str:
     system_prompt = (
         "You are a study assistant answering questions about one course. "
         "Use the retrieved course sources as the primary basis for your answer. "
-        "You may lightly synthesize, rephrase, and connect ideas across the sources when that helps clarity. "
-        "Do not invent concrete facts, requirements, APIs, definitions, dates, or code details that are not supported by the retrieved material. "
-        "If the sources are incomplete, say what is supported by the sources and clearly note what is uncertain. "
-        "Cite source-supported claims with source numbers like [1] or [2]. "
+        "You may synthesize, rephrase, and connect ideas across the sources when that helps clarity. "
+        "If the sources fully support the answer, stay grounded in them and cite source-supported claims with source numbers like [1] or [2]. "
+        "If the sources are incomplete or do not directly answer the question, you may add clearly labeled general background knowledge that is consistent with the sources and useful for study. "
+        "Do not present general background knowledge as if it came from the course sources. "
+        "When you add non-source background, explicitly signal it with wording like 'More generally' or 'As background'. "
+        "Do not invent specific course policies, requirements, definitions, dates, formulas, or code details unless they are supported by the retrieved material. "
+        "When there is uncertainty, say what is supported by the course materials and what is a broader explanatory inference. "
         "Keep the answer concise, useful, and study-oriented."
     )
     source_lines = []
@@ -45,7 +48,12 @@ def generate_grounded_answer(*, question: str, results: list[dict]) -> str:
             "Sources:",
             *source_lines,
             "",
-            "Answer using the sources as your main evidence. You may make light, clearly bounded inferences when the sources strongly suggest them, but do not add unsupported concrete details.",
+            (
+                "Answer using the sources as your main evidence. "
+                "If the sources are enough, answer directly and cite them. "
+                "If they are incomplete, first explain what the course materials support, then optionally add a short, clearly labeled general background explanation. "
+                "Only cite claims that are actually supported by the provided sources."
+            ),
         ]
     )
 

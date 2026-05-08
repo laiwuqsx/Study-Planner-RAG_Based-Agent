@@ -1,4 +1,4 @@
-import { FormEvent, useRef } from 'react';
+import { FormEvent, useRef, useState } from 'react';
 
 import { navigateToDocumentChunks, navigateToStudyPlan, navigateToTopics, navigateToTopicReview } from '../router';
 import { ChatMessage, Course, TopicReview } from '../types';
@@ -38,6 +38,7 @@ export function TopicReviewView({
 }: TopicReviewViewProps) {
   const chatSectionRef = useRef<HTMLElement | null>(null);
   const chatInputRef = useRef<HTMLInputElement | null>(null);
+  const [revealedAnswers, setRevealedAnswers] = useState<Record<string, boolean>>({});
   const topic = review?.topic ?? null;
   const turns = [];
   for (let index = 0; index < chatMessages.length; index += 1) {
@@ -52,6 +53,13 @@ export function TopicReviewView({
     window.setTimeout(() => {
       chatInputRef.current?.focus();
     }, 220);
+  }
+
+  function togglePracticeAnswer(questionId: string) {
+    setRevealedAnswers((current) => ({
+      ...current,
+      [questionId]: !current[questionId],
+    }));
   }
 
   return (
@@ -164,7 +172,22 @@ export function TopicReviewView({
                     </div>
                     <h3>{question.prompt}</h3>
                     {question.hint && <p className="section-copy"><strong>Hint:</strong> {question.hint}</p>}
-                    {question.answer && <p className="document-meta"><strong>Expected answer:</strong> {question.answer}</p>}
+                    {question.answer && (
+                      <div className="practice-answer-block">
+                        <div className="result-actions">
+                          <button
+                            type="button"
+                            className="secondary-button"
+                            onClick={() => togglePracticeAnswer(question.id)}
+                          >
+                            {revealedAnswers[question.id] ? 'Hide answer' : 'Show answer'}
+                          </button>
+                        </div>
+                        {revealedAnswers[question.id] && (
+                          <p className="document-meta"><strong>Expected answer:</strong> {question.answer}</p>
+                        )}
+                      </div>
+                    )}
                   </article>
                 ))}
               </div>

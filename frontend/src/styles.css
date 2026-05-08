@@ -732,6 +732,11 @@ pre {
   gap: 10px;
 }
 
+.practice-answer-block {
+  display: grid;
+  gap: 10px;
+}
+
 .next-topic-card {
   margin-bottom: 16px;
 }
