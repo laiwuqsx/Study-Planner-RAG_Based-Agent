@@ -127,6 +127,8 @@ export type Topic = {
   status: string;
   quality_score: number;
   review_note: string;
+  mastery_status: string;
+  last_reviewed_at: string | null;
   source_chunk_ids: string[];
   prerequisites: string[];
   created_at: string;
@@ -161,6 +163,9 @@ export type StudyPlanItem = {
   importance: number;
   difficulty: number;
   source_chunk_count: number;
+  status: string;
+  started_at: string | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -172,6 +177,8 @@ export type StudyPlan = {
   summary: string;
   generation_mode: string;
   item_count: number;
+  completed_item_count: number;
+  next_item_id: number | null;
   created_at: string;
   updated_at: string;
   items: StudyPlanItem[];

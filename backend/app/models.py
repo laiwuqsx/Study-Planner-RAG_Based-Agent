@@ -93,6 +93,8 @@ class Topic(Base):
     status: Mapped[str] = mapped_column(String(20), default="active", nullable=False, index=True)
     quality_score: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     review_note: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    mastery_status: Mapped[str] = mapped_column(String(20), default="not_started", nullable=False, index=True)
+    last_reviewed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     source_chunk_ids_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
     prerequisites_json: Mapped[str] = mapped_column(Text, default="[]", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
@@ -190,6 +192,9 @@ class StudyPlanItem(Base):
     importance: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     difficulty: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
     source_chunk_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False, index=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime,

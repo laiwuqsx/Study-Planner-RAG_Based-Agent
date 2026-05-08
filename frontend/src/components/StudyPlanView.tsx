@@ -11,9 +11,10 @@ type StudyPlanViewProps = {
   onFormChange: (next: StudyPlanGenerateInput) => void;
   onGenerate: (event: FormEvent) => void;
   onRegenerate: () => void;
+  onItemStatusChange: (itemId: number, status: 'pending' | 'in_progress' | 'completed') => void;
 };
 
-export function StudyPlanView({ course, plan, loading, form, onFormChange, onGenerate, onRegenerate }: StudyPlanViewProps) {
+export function StudyPlanView({ course, plan, loading, form, onFormChange, onGenerate, onRegenerate, onItemStatusChange }: StudyPlanViewProps) {
   return (
     <section className="chunk-page">
       <section className="panel">
@@ -89,7 +90,7 @@ export function StudyPlanView({ course, plan, loading, form, onFormChange, onGen
             <h2>{plan ? plan.title : 'Current plan'}</h2>
             {plan && (
               <p className="document-meta">
-                {plan.generation_mode} plan · {plan.item_count} items
+                {plan.generation_mode} plan · {plan.completed_item_count}/{plan.item_count} completed
               </p>
             )}
           </div>
@@ -111,7 +112,7 @@ export function StudyPlanView({ course, plan, loading, form, onFormChange, onGen
                       <p className="plan-order">Step {item.order_index}</p>
                       <h3>{item.title}</h3>
                       <p className="document-meta">
-                        {item.estimated_effort_minutes} min · importance {item.importance} · difficulty {item.difficulty}
+                        {item.estimated_effort_minutes} min · importance {item.importance} · difficulty {item.difficulty} · {item.status.replace('_', ' ')}
                       </p>
                     </div>
                   </div>
@@ -136,6 +137,32 @@ export function StudyPlanView({ course, plan, loading, form, onFormChange, onGen
                   )}
                   {course && (
                     <div className="result-actions">
+                      {item.status !== 'in_progress' && (
+                        <button
+                          type="button"
+                          className="link-button"
+                          onClick={() => onItemStatusChange(item.id, 'in_progress')}
+                        >
+                          Start
+                        </button>
+                      )}
+                      {item.status !== 'completed' && (
+                        <button
+                          type="button"
+                          onClick={() => onItemStatusChange(item.id, 'completed')}
+                        >
+                          Complete
+                        </button>
+                      )}
+                      {item.status !== 'pending' && (
+                        <button
+                          type="button"
+                          className="link-button"
+                          onClick={() => onItemStatusChange(item.id, 'pending')}
+                        >
+                          Reset
+                        </button>
+                      )}
                       <button
                         type="button"
                         className="link-button"

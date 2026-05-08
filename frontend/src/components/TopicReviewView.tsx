@@ -12,6 +12,7 @@ type TopicReviewViewProps = {
   chatMessages: ChatMessage[];
   onChatQueryChange: (value: string) => void;
   onChatSubmit: (event: FormEvent) => void;
+  onMasteryChange: (status: 'not_started' | 'reviewing' | 'mastered') => void;
 };
 
 function stripTopicPromptPrefix(content: string) {
@@ -27,6 +28,7 @@ export function TopicReviewView({
   chatMessages,
   onChatQueryChange,
   onChatSubmit,
+  onMasteryChange,
 }: TopicReviewViewProps) {
   const topic = review?.topic ?? null;
   const turns = [];
@@ -72,7 +74,7 @@ export function TopicReviewView({
             <div className="section-heading">
               <h2>Overview</h2>
               <p className="document-meta">
-                importance {topic.importance} · difficulty {topic.difficulty} · {review.source_chunks.length} supporting chunks
+                importance {topic.importance} · difficulty {topic.difficulty} · {review.source_chunks.length} supporting chunks · {topic.mastery_status.replace('_', ' ')}
               </p>
             </div>
             {topic.description && <p className="section-copy">{topic.description}</p>}
@@ -84,6 +86,26 @@ export function TopicReviewView({
                   </span>
                 ))}
               </div>
+            )}
+            <div className="result-actions">
+              {topic.mastery_status !== 'reviewing' && (
+                <button type="button" className="link-button" onClick={() => onMasteryChange('reviewing')}>
+                  Mark reviewing
+                </button>
+              )}
+              {topic.mastery_status !== 'mastered' && (
+                <button type="button" onClick={() => onMasteryChange('mastered')}>
+                  Mark mastered
+                </button>
+              )}
+              {topic.mastery_status !== 'not_started' && (
+                <button type="button" className="link-button" onClick={() => onMasteryChange('not_started')}>
+                  Reset status
+                </button>
+              )}
+            </div>
+            {topic.last_reviewed_at && (
+              <p className="document-meta">Last reviewed {new Date(topic.last_reviewed_at).toLocaleString()}</p>
             )}
           </section>
 

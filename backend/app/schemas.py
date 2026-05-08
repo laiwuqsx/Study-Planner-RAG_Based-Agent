@@ -166,6 +166,8 @@ class TopicResponse(BaseModel):
     status: str
     quality_score: int
     review_note: str
+    mastery_status: str
+    last_reviewed_at: datetime | None
     source_chunk_ids: list[str]
     prerequisites: list[str]
     created_at: datetime
@@ -212,7 +214,12 @@ class TopicUpdateRequest(BaseModel):
     status: Optional[str] = Field(default=None, pattern="^(active|suspect|hidden)$")
     quality_score: Optional[int] = Field(default=None, ge=1, le=5)
     review_note: Optional[str] = None
+    mastery_status: Optional[str] = Field(default=None, pattern="^(not_started|reviewing|mastered)$")
     prerequisites: Optional[list[str]] = None
+
+
+class TopicMasteryUpdateRequest(BaseModel):
+    mastery_status: str = Field(pattern="^(not_started|reviewing|mastered)$")
 
 
 class ChatRequest(BaseModel):
@@ -287,6 +294,9 @@ class StudyPlanItemResponse(BaseModel):
     importance: int
     difficulty: int
     source_chunk_count: int
+    status: str
+    started_at: datetime | None
+    completed_at: datetime | None
     created_at: datetime
     updated_at: datetime
 
@@ -298,6 +308,8 @@ class StudyPlanResponse(BaseModel):
     summary: str
     generation_mode: str
     item_count: int
+    completed_item_count: int
+    next_item_id: int | None
     created_at: datetime
     updated_at: datetime
     items: list[StudyPlanItemResponse]
@@ -305,3 +317,7 @@ class StudyPlanResponse(BaseModel):
 
 class StudyPlanGenerateResponse(BaseModel):
     plan: StudyPlanResponse
+
+
+class StudyPlanItemUpdateRequest(BaseModel):
+    status: str = Field(pattern="^(pending|in_progress|completed)$")

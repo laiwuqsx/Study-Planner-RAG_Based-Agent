@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from datetime import datetime
 
 from sqlalchemy.orm import Session, selectinload
 
@@ -114,6 +115,8 @@ def generate_study_plan(
 
 def serialize_study_plan(plan: StudyPlan) -> StudyPlanResponse:
     items = sorted(plan.items, key=lambda item: (item.order_index, item.id))
+    completed_item_count = sum(1 for item in items if item.status == "completed")
+    next_item = next((item for item in items if item.status != "completed"), None)
     return StudyPlanResponse(
         id=plan.id,
         course_id=plan.course_id,
@@ -121,6 +124,8 @@ def serialize_study_plan(plan: StudyPlan) -> StudyPlanResponse:
         summary=plan.summary,
         generation_mode=plan.generation_mode,
         item_count=plan.item_count,
+        completed_item_count=completed_item_count,
+        next_item_id=next_item.id if next_item else None,
         created_at=plan.created_at,
         updated_at=plan.updated_at,
         items=[
@@ -136,12 +141,42 @@ def serialize_study_plan(plan: StudyPlan) -> StudyPlanResponse:
                 importance=item.importance,
                 difficulty=item.difficulty,
                 source_chunk_count=item.source_chunk_count,
+                status=item.status,
+                started_at=item.started_at,
+                completed_at=item.completed_at,
                 created_at=item.created_at,
                 updated_at=item.updated_at,
             )
             for item in items
         ],
     )
+
+
+def update_study_plan_item_status(db: Session, *, item: StudyPlanItem, status: str) -> StudyPlan:
+    now = datetime.utcnow()
+    if status == "pending":
+        item.status = "pending"
+        item.started_at = None
+        item.completed_at = None
+    elif status == "in_progress":
+        item.status = "in_progress"
+        if item.started_at is None:
+            item.started_at = now
+        item.completed_at = None
+    elif status == "completed":
+        item.status = "completed"
+        if item.started_at is None:
+            item.started_at = now
+        item.completed_at = now
+
+    db.commit()
+    plan = (
+        db.query(StudyPlan)
+        .options(selectinload(StudyPlan.items))
+        .filter(StudyPlan.id == item.plan_id)
+        .first()
+    )
+    return plan or item.plan
 
 
 def _build_topic_catalog(

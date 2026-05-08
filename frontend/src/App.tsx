@@ -645,6 +645,43 @@ export default function App() {
     }
   }
 
+  async function handleTopicMasteryChange(status: 'not_started' | 'reviewing' | 'mastered') {
+    const courseId = route.name === 'topic-review' ? route.params.courseId : selectedCourseId;
+    const topicId = route.name === 'topic-review' ? route.params.topicId : topicReview?.topic.id;
+    if (!courseId || !topicId) return;
+    setMessage('');
+    try {
+      const payload = await apiFetch<Topic>(`/courses/${courseId}/topics/${topicId}/mastery`, {
+        method: 'PATCH',
+        body: JSON.stringify({ mastery_status: status }),
+      });
+      setTopicReview((current) => (current ? { ...current, topic: payload } : current));
+      setTopics((current) => current.map((topic) => (topic.id === payload.id ? payload : topic)));
+      setMessage(`Topic marked as ${status.replace('_', ' ')}.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Topic status update failed');
+    }
+  }
+
+  async function handleStudyPlanItemStatusChange(itemId: number, status: 'pending' | 'in_progress' | 'completed') {
+    const courseId = route.name === 'study-plan' ? route.params.courseId : selectedCourseId;
+    if (!courseId) return;
+    setStudyPlanLoading(true);
+    setMessage('');
+    try {
+      const payload = await apiFetch<StudyPlan>(`/courses/${courseId}/study-plan/items/${itemId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status }),
+      });
+      setStudyPlan(payload);
+      setMessage(`Study plan item marked ${status.replace('_', ' ')}.`);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Study plan item update failed');
+    } finally {
+      setStudyPlanLoading(false);
+    }
+  }
+
   return (
     <main className="app-shell">
       <section className="topbar">
@@ -701,6 +738,7 @@ export default function App() {
           chatMessages={topicReviewChatMessages}
           onChatQueryChange={setTopicReviewChatQuery}
           onChatSubmit={handleTopicReviewChatSubmit}
+          onMasteryChange={handleTopicMasteryChange}
         />
       ) : route.name === 'study-plan' ? (
         <StudyPlanView
@@ -714,6 +752,7 @@ export default function App() {
             handleStudyPlanGenerate('/generate').catch((error) => setMessage(error.message));
           }}
           onRegenerate={() => handleStudyPlanGenerate('/regenerate').catch((error) => setMessage(error.message))}
+          onItemStatusChange={handleStudyPlanItemStatusChange}
         />
       ) : route.name === 'chat' ? (
         <ChatView

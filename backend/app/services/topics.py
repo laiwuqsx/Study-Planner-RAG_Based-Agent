@@ -1,6 +1,7 @@
 import json
 import re
 from collections import Counter, defaultdict
+from datetime import datetime
 
 from sqlalchemy.orm import Session
 
@@ -264,6 +265,7 @@ def update_topic(
     status: str | None = None,
     quality_score: int | None = None,
     review_note: str | None = None,
+    mastery_status: str | None = None,
     prerequisites: list[str] | None = None,
 ) -> Topic:
     if name is not None:
@@ -283,6 +285,9 @@ def update_topic(
         topic.quality_score = max(1, min(5, quality_score))
     if review_note is not None:
         topic.review_note = review_note.strip()
+    if mastery_status is not None:
+        topic.mastery_status = mastery_status
+        topic.last_reviewed_at = datetime.utcnow() if mastery_status in {"reviewing", "mastered"} else None
     if prerequisites is not None:
         topic.prerequisites_json = json.dumps(_unique_preserve_order([item.strip() for item in prerequisites if item.strip()]))
     db.commit()
@@ -302,6 +307,8 @@ def serialize_topic(topic: Topic) -> dict:
         "status": topic.status,
         "quality_score": topic.quality_score,
         "review_note": topic.review_note,
+        "mastery_status": topic.mastery_status,
+        "last_reviewed_at": topic.last_reviewed_at,
         "source_chunk_ids": json.loads(topic.source_chunk_ids_json or "[]"),
         "prerequisites": json.loads(topic.prerequisites_json or "[]"),
         "created_at": topic.created_at,

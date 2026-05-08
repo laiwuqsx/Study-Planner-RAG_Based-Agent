@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.app.auth import get_current_user, get_db
-from backend.app.dependencies import get_user_course_or_404
-from backend.app.models import Course, User
-from backend.app.schemas import StudyPlanGenerateRequest, StudyPlanGenerateResponse, StudyPlanResponse
-from backend.app.services.study_plans import generate_study_plan, get_latest_study_plan, serialize_study_plan
+from backend.app.dependencies import get_user_course_or_404, get_user_study_plan_item_or_404
+from backend.app.models import Course, StudyPlanItem, User
+from backend.app.schemas import StudyPlanGenerateRequest, StudyPlanGenerateResponse, StudyPlanItemUpdateRequest, StudyPlanResponse
+from backend.app.services.study_plans import generate_study_plan, get_latest_study_plan, serialize_study_plan, update_study_plan_item_status
 
 router = APIRouter(prefix="/courses/{course_id}/study-plan", tags=["study-plan"])
 
@@ -60,3 +60,16 @@ async def regenerate_course_study_plan(
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return StudyPlanGenerateResponse(plan=serialize_study_plan(plan))
+
+
+@router.patch("/items/{item_id}", response_model=StudyPlanResponse)
+async def patch_study_plan_item(
+    request: StudyPlanItemUpdateRequest,
+    course: Course = Depends(get_user_course_or_404),
+    item: StudyPlanItem = Depends(get_user_study_plan_item_or_404),
+    db: Session = Depends(get_db),
+):
+    if item.plan.course_id != course.id:
+        raise HTTPException(status_code=404, detail="Study plan item not found")
+    plan = update_study_plan_item_status(db, item=item, status=request.status)
+    return serialize_study_plan(plan)
