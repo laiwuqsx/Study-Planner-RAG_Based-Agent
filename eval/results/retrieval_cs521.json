@@ -1,0 +1,1014 @@
+{
+  "benchmark_name": "cs521-real-course-benchmark",
+  "top_k": 5,
+  "modes": [
+    "keyword",
+    "vector",
+    "hybrid"
+  ],
+  "summary": {
+    "keyword": {
+      "metrics": {
+        "precision_at_5": 0.0,
+        "recall_at_5": 0.0,
+        "hit_at_5": 0.0,
+        "mrr": 0.0,
+        "case_count": 8
+      },
+      "cases": [
+        {
+          "id": "secret-key-cryptography",
+          "course_id": 1,
+          "question": "How does secret-key cryptography work, and what is its main tradeoff?",
+          "query_type": "definition",
+          "retrieval_mode": "keyword",
+          "result_count": 0,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": []
+        },
+        {
+          "id": "hash-pointer",
+          "course_id": 1,
+          "question": "What is a hash pointer and why is it useful in blockchains?",
+          "query_type": "definition",
+          "retrieval_mode": "keyword",
+          "result_count": 1,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-7-child-41",
+              "root_chunk_id": "doc-7-parent-37",
+              "parent_chunk_id": 84,
+              "filename": "cs521 - Topic 2.pdf",
+              "section_title": "Tx0 Tx1 Tx2 Tx3",
+              "score": 0.26475492
+            }
+          ]
+        },
+        {
+          "id": "early-digital-currency-failures",
+          "course_id": 1,
+          "question": "Why did many early digital currencies fail before Bitcoin?",
+          "query_type": "comparison",
+          "retrieval_mode": "keyword",
+          "result_count": 0,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": []
+        },
+        {
+          "id": "utxo-model",
+          "course_id": 1,
+          "question": "What is the UTXO model in Bitcoin?",
+          "query_type": "definition",
+          "retrieval_mode": "keyword",
+          "result_count": 2,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-23-child-5",
+              "root_chunk_id": "doc-23-parent-5",
+              "parent_chunk_id": 204,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum: A Programmable Blockchain",
+              "score": 0.54290307
+            },
+            {
+              "chunk_id": "doc-23-child-42",
+              "root_chunk_id": "doc-23-parent-30",
+              "parent_chunk_id": 229,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum vs. Bitcoin: How It All Fits Together",
+              "score": 0.2723025
+            }
+          ]
+        },
+        {
+          "id": "ethereum-gas",
+          "course_id": 1,
+          "question": "How does gas prevent denial-of-service or infinite loops in Ethereum?",
+          "query_type": "procedure",
+          "retrieval_mode": "keyword",
+          "result_count": 0,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": []
+        },
+        {
+          "id": "ethereum-three-tries",
+          "course_id": 1,
+          "question": "What are Ethereum's three tries used for?",
+          "query_type": "definition",
+          "retrieval_mode": "keyword",
+          "result_count": 0,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": []
+        },
+        {
+          "id": "consensus-properties",
+          "course_id": 1,
+          "question": "What are the core properties of consensus?",
+          "query_type": "definition",
+          "retrieval_mode": "keyword",
+          "result_count": 0,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": []
+        },
+        {
+          "id": "two-generals-impossibility",
+          "course_id": 1,
+          "question": "Why is agreement impossible in the Two Generals problem?",
+          "query_type": "reasoning",
+          "retrieval_mode": "keyword",
+          "result_count": 0,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": []
+        }
+      ]
+    },
+    "vector": {
+      "metrics": {
+        "precision_at_5": 0.175,
+        "recall_at_5": 0.5625,
+        "hit_at_5": 0.625,
+        "mrr": 0.4792,
+        "case_count": 8
+      },
+      "cases": [
+        {
+          "id": "secret-key-cryptography",
+          "course_id": 1,
+          "question": "How does secret-key cryptography work, and what is its main tradeoff?",
+          "query_type": "definition",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-37-child-12",
+              "root_chunk_id": "doc-37-parent-10",
+              "parent_chunk_id": 910,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Schnorr Protocol: Soundness",
+              "score": 0.4438958168029785
+            },
+            {
+              "chunk_id": "doc-37-child-14",
+              "root_chunk_id": "doc-37-parent-11",
+              "parent_chunk_id": 911,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Schnorr Signatures via Fiat-Shamir Transform",
+              "score": 0.3850438892841339
+            },
+            {
+              "chunk_id": "doc-37-child-13",
+              "root_chunk_id": "doc-37-parent-11",
+              "parent_chunk_id": 911,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Schnorr Signatures via Fiat-Shamir Transform",
+              "score": 0.3715212345123291
+            },
+            {
+              "chunk_id": "doc-37-child-15",
+              "root_chunk_id": "doc-37-parent-12",
+              "parent_chunk_id": 912,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Why Is Computing Inverses Easy?",
+              "score": 0.3634278476238251
+            },
+            {
+              "chunk_id": "doc-37-child-5",
+              "root_chunk_id": "doc-37-parent-5",
+              "parent_chunk_id": 905,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "𝐹.",
+              "score": 0.3625236451625824
+            }
+          ]
+        },
+        {
+          "id": "hash-pointer",
+          "course_id": 1,
+          "question": "What is a hash pointer and why is it useful in blockchains?",
+          "query_type": "definition",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-23-child-25",
+              "root_chunk_id": "doc-23-parent-19",
+              "parent_chunk_id": 218,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Modified Merkle Patricia Trie (MPT)",
+              "score": 0.47785595059394836
+            },
+            {
+              "chunk_id": "doc-23-child-26",
+              "root_chunk_id": "doc-23-parent-20",
+              "parent_chunk_id": 219,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum’s Three Tries",
+              "score": 0.42209458351135254
+            },
+            {
+              "chunk_id": "doc-20-child-10",
+              "root_chunk_id": "doc-20-parent-10",
+              "parent_chunk_id": 182,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Timestamp Servers: Blocks and Total Orders",
+              "score": 0.41657519340515137
+            },
+            {
+              "chunk_id": "doc-20-child-14",
+              "root_chunk_id": "doc-20-parent-12",
+              "parent_chunk_id": 184,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Decentralized Network",
+              "score": 0.41454678773880005
+            },
+            {
+              "chunk_id": "doc-20-child-11",
+              "root_chunk_id": "doc-20-parent-11",
+              "parent_chunk_id": 183,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Timestamp Servers: Blocks and Total Orders",
+              "score": 0.41215646266937256
+            }
+          ]
+        },
+        {
+          "id": "early-digital-currency-failures",
+          "course_id": 1,
+          "question": "Why did many early digital currencies fail before Bitcoin?",
+          "query_type": "comparison",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-20-child-7",
+              "root_chunk_id": "doc-20-parent-7",
+              "parent_chunk_id": 179,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Bitcoin’s Goal",
+              "score": 0.5021969676017761
+            },
+            {
+              "chunk_id": "doc-20-child-4",
+              "root_chunk_id": "doc-20-parent-4",
+              "parent_chunk_id": 176,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Double Spend attack",
+              "score": 0.47099733352661133
+            },
+            {
+              "chunk_id": "doc-20-child-2",
+              "root_chunk_id": "doc-20-parent-2",
+              "parent_chunk_id": 174,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Early Cryptographic Digital Currencies ... All Failed",
+              "score": 0.46162423491477966
+            },
+            {
+              "chunk_id": "doc-36-child-20",
+              "root_chunk_id": "doc-36-parent-19",
+              "parent_chunk_id": 890,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Double-Spend Problem",
+              "score": 0.44744521379470825
+            },
+            {
+              "chunk_id": "doc-23-child-43",
+              "root_chunk_id": "doc-23-parent-30",
+              "parent_chunk_id": 229,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum vs. Bitcoin: How It All Fits Together",
+              "score": 0.42500418424606323
+            }
+          ]
+        },
+        {
+          "id": "utxo-model",
+          "course_id": 1,
+          "question": "What is the UTXO model in Bitcoin?",
+          "query_type": "definition",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": 1,
+          "precision_at_5": 0.2,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-20-child-17",
+              "root_chunk_id": "doc-20-parent-15",
+              "parent_chunk_id": 187,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "A Concrete Transaction: The UTXO Model",
+              "score": 0.45697471499443054
+            },
+            {
+              "chunk_id": "doc-23-child-2",
+              "root_chunk_id": "doc-23-parent-2",
+              "parent_chunk_id": 201,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Bitcoin’s Limitations – Why Something More?",
+              "score": 0.4265105128288269
+            },
+            {
+              "chunk_id": "doc-23-child-5",
+              "root_chunk_id": "doc-23-parent-5",
+              "parent_chunk_id": 204,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum: A Programmable Blockchain",
+              "score": 0.38544780015945435
+            },
+            {
+              "chunk_id": "doc-20-child-1",
+              "root_chunk_id": "doc-20-parent-1",
+              "parent_chunk_id": 173,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Grigore Rosu",
+              "score": 0.38342776894569397
+            },
+            {
+              "chunk_id": "doc-36-child-20",
+              "root_chunk_id": "doc-36-parent-19",
+              "parent_chunk_id": 890,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Double-Spend Problem",
+              "score": 0.3750571012496948
+            }
+          ]
+        },
+        {
+          "id": "ethereum-gas",
+          "course_id": 1,
+          "question": "How does gas prevent denial-of-service or infinite loops in Ethereum?",
+          "query_type": "procedure",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": 1,
+          "precision_at_5": 0.4,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-23-child-14",
+              "root_chunk_id": "doc-23-parent-11",
+              "parent_chunk_id": 210,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "The Gas Mechanism",
+              "score": 0.640171229839325
+            },
+            {
+              "chunk_id": "doc-23-child-12",
+              "root_chunk_id": "doc-23-parent-10",
+              "parent_chunk_id": 209,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "The Gas Mechanism",
+              "score": 0.581700325012207
+            },
+            {
+              "chunk_id": "doc-23-child-11",
+              "root_chunk_id": "doc-23-parent-9",
+              "parent_chunk_id": 208,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Transactions and Messages",
+              "score": 0.44986864924430847
+            },
+            {
+              "chunk_id": "doc-23-child-13",
+              "root_chunk_id": "doc-23-parent-10",
+              "parent_chunk_id": 209,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "The Gas Mechanism",
+              "score": 0.4167695641517639
+            },
+            {
+              "chunk_id": "doc-23-child-10",
+              "root_chunk_id": "doc-23-parent-9",
+              "parent_chunk_id": 208,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Transactions and Messages",
+              "score": 0.37543562054634094
+            }
+          ]
+        },
+        {
+          "id": "ethereum-three-tries",
+          "course_id": 1,
+          "question": "What are Ethereum's three tries used for?",
+          "query_type": "definition",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": 2,
+          "precision_at_5": 0.2,
+          "recall_at_5": 0.5,
+          "top_results": [
+            {
+              "chunk_id": "doc-23-child-24",
+              "root_chunk_id": "doc-23-parent-18",
+              "parent_chunk_id": 217,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Tree vs. Trie",
+              "score": 0.4553598165512085
+            },
+            {
+              "chunk_id": "doc-23-child-27",
+              "root_chunk_id": "doc-23-parent-20",
+              "parent_chunk_id": 219,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum’s Three Tries",
+              "score": 0.3827539086341858
+            },
+            {
+              "chunk_id": "doc-23-child-29",
+              "root_chunk_id": "doc-23-parent-22",
+              "parent_chunk_id": 221,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum Block Structure",
+              "score": 0.3811415731906891
+            },
+            {
+              "chunk_id": "doc-23-child-8",
+              "root_chunk_id": "doc-23-parent-7",
+              "parent_chunk_id": 206,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "– Contract Accounts",
+              "score": 0.3756854236125946
+            },
+            {
+              "chunk_id": "doc-23-child-25",
+              "root_chunk_id": "doc-23-parent-19",
+              "parent_chunk_id": 218,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Modified Merkle Patricia Trie (MPT)",
+              "score": 0.3728475570678711
+            }
+          ]
+        },
+        {
+          "id": "consensus-properties",
+          "course_id": 1,
+          "question": "What are the core properties of consensus?",
+          "query_type": "definition",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": 1,
+          "precision_at_5": 0.2,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-36-child-7",
+              "root_chunk_id": "doc-36-parent-7",
+              "parent_chunk_id": 878,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Consensus: Key Properties",
+              "score": 0.6060835719108582
+            },
+            {
+              "chunk_id": "doc-36-child-14",
+              "root_chunk_id": "doc-36-parent-13",
+              "parent_chunk_id": 884,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Safety vs. Liveness",
+              "score": 0.5755103826522827
+            },
+            {
+              "chunk_id": "doc-36-child-6",
+              "root_chunk_id": "doc-36-parent-6",
+              "parent_chunk_id": 877,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Consensus Problem",
+              "score": 0.5560632944107056
+            },
+            {
+              "chunk_id": "doc-36-child-13",
+              "root_chunk_id": "doc-36-parent-12",
+              "parent_chunk_id": 883,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The FLP Impossibility Result",
+              "score": 0.5352441668510437
+            },
+            {
+              "chunk_id": "doc-36-child-12",
+              "root_chunk_id": "doc-36-parent-11",
+              "parent_chunk_id": 882,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Byzantine Generals Problem",
+              "score": 0.49703168869018555
+            }
+          ]
+        },
+        {
+          "id": "two-generals-impossibility",
+          "course_id": 1,
+          "question": "Why is agreement impossible in the Two Generals problem?",
+          "query_type": "reasoning",
+          "retrieval_mode": "vector",
+          "result_count": 5,
+          "first_relevant_rank": 3,
+          "precision_at_5": 0.4,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-36-child-9",
+              "root_chunk_id": "doc-36-parent-9",
+              "parent_chunk_id": 880,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Two Generals Problem",
+              "score": 0.5017594695091248
+            },
+            {
+              "chunk_id": "doc-36-child-5",
+              "root_chunk_id": "doc-36-parent-5",
+              "parent_chunk_id": 876,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Consensus",
+              "score": 0.4931258261203766
+            },
+            {
+              "chunk_id": "doc-36-child-11",
+              "root_chunk_id": "doc-36-parent-10",
+              "parent_chunk_id": 881,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Two Generals: Why Agreement Is Impossible",
+              "score": 0.4862726926803589
+            },
+            {
+              "chunk_id": "doc-36-child-10",
+              "root_chunk_id": "doc-36-parent-10",
+              "parent_chunk_id": 881,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Two Generals: Why Agreement Is Impossible",
+              "score": 0.46493977308273315
+            },
+            {
+              "chunk_id": "doc-36-child-6",
+              "root_chunk_id": "doc-36-parent-6",
+              "parent_chunk_id": 877,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Consensus Problem",
+              "score": 0.4480047821998596
+            }
+          ]
+        }
+      ]
+    },
+    "hybrid": {
+      "metrics": {
+        "precision_at_5": 0.175,
+        "recall_at_5": 0.5625,
+        "hit_at_5": 0.625,
+        "mrr": 0.4167,
+        "case_count": 8
+      },
+      "cases": [
+        {
+          "id": "secret-key-cryptography",
+          "course_id": 1,
+          "question": "How does secret-key cryptography work, and what is its main tradeoff?",
+          "query_type": "definition",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-37-child-12",
+              "root_chunk_id": "doc-37-parent-10",
+              "parent_chunk_id": 910,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Schnorr Protocol: Soundness",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-37-child-14",
+              "root_chunk_id": "doc-37-parent-11",
+              "parent_chunk_id": 911,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Schnorr Signatures via Fiat-Shamir Transform",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-37-child-13",
+              "root_chunk_id": "doc-37-parent-11",
+              "parent_chunk_id": 911,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Schnorr Signatures via Fiat-Shamir Transform",
+              "score": 0.015873015873015872
+            },
+            {
+              "chunk_id": "doc-37-child-15",
+              "root_chunk_id": "doc-37-parent-12",
+              "parent_chunk_id": 912,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "Why Is Computing Inverses Easy?",
+              "score": 0.015625
+            },
+            {
+              "chunk_id": "doc-37-child-5",
+              "root_chunk_id": "doc-37-parent-5",
+              "parent_chunk_id": 905,
+              "filename": "cs521 - Topic 6.pdf",
+              "section_title": "𝐹.",
+              "score": 0.015384615384615385
+            }
+          ]
+        },
+        {
+          "id": "hash-pointer",
+          "course_id": 1,
+          "question": "What is a hash pointer and why is it useful in blockchains?",
+          "query_type": "definition",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-7-child-41",
+              "root_chunk_id": "doc-7-parent-37",
+              "parent_chunk_id": 84,
+              "filename": "cs521 - Topic 2.pdf",
+              "section_title": "Tx0 Tx1 Tx2 Tx3",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-23-child-25",
+              "root_chunk_id": "doc-23-parent-19",
+              "parent_chunk_id": 218,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Modified Merkle Patricia Trie (MPT)",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-23-child-26",
+              "root_chunk_id": "doc-23-parent-20",
+              "parent_chunk_id": 219,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum’s Three Tries",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-20-child-10",
+              "root_chunk_id": "doc-20-parent-10",
+              "parent_chunk_id": 182,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Timestamp Servers: Blocks and Total Orders",
+              "score": 0.015873015873015872
+            },
+            {
+              "chunk_id": "doc-20-child-14",
+              "root_chunk_id": "doc-20-parent-12",
+              "parent_chunk_id": 184,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Decentralized Network",
+              "score": 0.015625
+            }
+          ]
+        },
+        {
+          "id": "early-digital-currency-failures",
+          "course_id": 1,
+          "question": "Why did many early digital currencies fail before Bitcoin?",
+          "query_type": "comparison",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": null,
+          "precision_at_5": 0.0,
+          "recall_at_5": 0.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-20-child-7",
+              "root_chunk_id": "doc-20-parent-7",
+              "parent_chunk_id": 179,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Bitcoin’s Goal",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-20-child-4",
+              "root_chunk_id": "doc-20-parent-4",
+              "parent_chunk_id": 176,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Double Spend attack",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-20-child-2",
+              "root_chunk_id": "doc-20-parent-2",
+              "parent_chunk_id": 174,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Early Cryptographic Digital Currencies ... All Failed",
+              "score": 0.015873015873015872
+            },
+            {
+              "chunk_id": "doc-36-child-20",
+              "root_chunk_id": "doc-36-parent-19",
+              "parent_chunk_id": 890,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Double-Spend Problem",
+              "score": 0.015625
+            },
+            {
+              "chunk_id": "doc-23-child-43",
+              "root_chunk_id": "doc-23-parent-30",
+              "parent_chunk_id": 229,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum vs. Bitcoin: How It All Fits Together",
+              "score": 0.015384615384615385
+            }
+          ]
+        },
+        {
+          "id": "utxo-model",
+          "course_id": 1,
+          "question": "What is the UTXO model in Bitcoin?",
+          "query_type": "definition",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": 2,
+          "precision_at_5": 0.2,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-23-child-5",
+              "root_chunk_id": "doc-23-parent-5",
+              "parent_chunk_id": 204,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum: A Programmable Blockchain",
+              "score": 0.032266458495966696
+            },
+            {
+              "chunk_id": "doc-20-child-17",
+              "root_chunk_id": "doc-20-parent-15",
+              "parent_chunk_id": 187,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "A Concrete Transaction: The UTXO Model",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-23-child-42",
+              "root_chunk_id": "doc-23-parent-30",
+              "parent_chunk_id": 229,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum vs. Bitcoin: How It All Fits Together",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-23-child-2",
+              "root_chunk_id": "doc-23-parent-2",
+              "parent_chunk_id": 201,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Bitcoin’s Limitations – Why Something More?",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-20-child-1",
+              "root_chunk_id": "doc-20-parent-1",
+              "parent_chunk_id": 173,
+              "filename": "cs521 - Topic 3.pdf",
+              "section_title": "Grigore Rosu",
+              "score": 0.015625
+            }
+          ]
+        },
+        {
+          "id": "ethereum-gas",
+          "course_id": 1,
+          "question": "How does gas prevent denial-of-service or infinite loops in Ethereum?",
+          "query_type": "procedure",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": 1,
+          "precision_at_5": 0.4,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-23-child-14",
+              "root_chunk_id": "doc-23-parent-11",
+              "parent_chunk_id": 210,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "The Gas Mechanism",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-23-child-12",
+              "root_chunk_id": "doc-23-parent-10",
+              "parent_chunk_id": 209,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "The Gas Mechanism",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-23-child-11",
+              "root_chunk_id": "doc-23-parent-9",
+              "parent_chunk_id": 208,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Transactions and Messages",
+              "score": 0.015873015873015872
+            },
+            {
+              "chunk_id": "doc-23-child-13",
+              "root_chunk_id": "doc-23-parent-10",
+              "parent_chunk_id": 209,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "The Gas Mechanism",
+              "score": 0.015625
+            },
+            {
+              "chunk_id": "doc-23-child-10",
+              "root_chunk_id": "doc-23-parent-9",
+              "parent_chunk_id": 208,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Transactions and Messages",
+              "score": 0.015384615384615385
+            }
+          ]
+        },
+        {
+          "id": "ethereum-three-tries",
+          "course_id": 1,
+          "question": "What are Ethereum's three tries used for?",
+          "query_type": "definition",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": 2,
+          "precision_at_5": 0.2,
+          "recall_at_5": 0.5,
+          "top_results": [
+            {
+              "chunk_id": "doc-23-child-24",
+              "root_chunk_id": "doc-23-parent-18",
+              "parent_chunk_id": 217,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Tree vs. Trie",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-23-child-27",
+              "root_chunk_id": "doc-23-parent-20",
+              "parent_chunk_id": 219,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum’s Three Tries",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-23-child-29",
+              "root_chunk_id": "doc-23-parent-22",
+              "parent_chunk_id": 221,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Ethereum Block Structure",
+              "score": 0.015873015873015872
+            },
+            {
+              "chunk_id": "doc-23-child-8",
+              "root_chunk_id": "doc-23-parent-7",
+              "parent_chunk_id": 206,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "– Contract Accounts",
+              "score": 0.015625
+            },
+            {
+              "chunk_id": "doc-23-child-25",
+              "root_chunk_id": "doc-23-parent-19",
+              "parent_chunk_id": 218,
+              "filename": "cs521 - Topic 4.pdf",
+              "section_title": "Modified Merkle Patricia Trie (MPT)",
+              "score": 0.015384615384615385
+            }
+          ]
+        },
+        {
+          "id": "consensus-properties",
+          "course_id": 1,
+          "question": "What are the core properties of consensus?",
+          "query_type": "definition",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": 1,
+          "precision_at_5": 0.2,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-36-child-7",
+              "root_chunk_id": "doc-36-parent-7",
+              "parent_chunk_id": 878,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Consensus: Key Properties",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-36-child-14",
+              "root_chunk_id": "doc-36-parent-13",
+              "parent_chunk_id": 884,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Safety vs. Liveness",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-36-child-6",
+              "root_chunk_id": "doc-36-parent-6",
+              "parent_chunk_id": 877,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Consensus Problem",
+              "score": 0.015873015873015872
+            },
+            {
+              "chunk_id": "doc-36-child-13",
+              "root_chunk_id": "doc-36-parent-12",
+              "parent_chunk_id": 883,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The FLP Impossibility Result",
+              "score": 0.015625
+            },
+            {
+              "chunk_id": "doc-36-child-12",
+              "root_chunk_id": "doc-36-parent-11",
+              "parent_chunk_id": 882,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Byzantine Generals Problem",
+              "score": 0.015384615384615385
+            }
+          ]
+        },
+        {
+          "id": "two-generals-impossibility",
+          "course_id": 1,
+          "question": "Why is agreement impossible in the Two Generals problem?",
+          "query_type": "reasoning",
+          "retrieval_mode": "hybrid",
+          "result_count": 5,
+          "first_relevant_rank": 3,
+          "precision_at_5": 0.4,
+          "recall_at_5": 1.0,
+          "top_results": [
+            {
+              "chunk_id": "doc-36-child-9",
+              "root_chunk_id": "doc-36-parent-9",
+              "parent_chunk_id": 880,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Two Generals Problem",
+              "score": 0.01639344262295082
+            },
+            {
+              "chunk_id": "doc-36-child-5",
+              "root_chunk_id": "doc-36-parent-5",
+              "parent_chunk_id": 876,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Consensus",
+              "score": 0.016129032258064516
+            },
+            {
+              "chunk_id": "doc-36-child-11",
+              "root_chunk_id": "doc-36-parent-10",
+              "parent_chunk_id": 881,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Two Generals: Why Agreement Is Impossible",
+              "score": 0.015873015873015872
+            },
+            {
+              "chunk_id": "doc-36-child-10",
+              "root_chunk_id": "doc-36-parent-10",
+              "parent_chunk_id": 881,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "Two Generals: Why Agreement Is Impossible",
+              "score": 0.015625
+            },
+            {
+              "chunk_id": "doc-36-child-6",
+              "root_chunk_id": "doc-36-parent-6",
+              "parent_chunk_id": 877,
+              "filename": "cs521 - Topic 5.pdf",
+              "section_title": "The Consensus Problem",
+              "score": 0.015384615384615385
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

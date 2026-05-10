@@ -1,0 +1,326 @@
+{
+  "benchmark_name": "auto-os-eval-benchmark",
+  "judge_mode": "llm",
+  "retrieval_mode": "hybrid",
+  "top_k": 5,
+  "wins": {
+    "agent": 4,
+    "plain_llm": 0,
+    "tie": 0
+  },
+  "agent_average": {
+    "correctness": 4.75,
+    "groundedness": 4.75,
+    "course_specificity": 4.75,
+    "study_usefulness": 4.75
+  },
+  "plain_llm_average": {
+    "correctness": 4.75,
+    "groundedness": 1.0,
+    "course_specificity": 1.0,
+    "study_usefulness": 4.25
+  },
+  "cases": [
+    {
+      "id": "threads-vs-processes",
+      "course_id": 20,
+      "question": "How do threads differ from processes?",
+      "query_type": "comparison",
+      "reference_answer": "Threads share memory and resources inside a process, while processes isolate address spaces and usually communicate with more overhead.",
+      "key_points": [
+        "threads share memory",
+        "processes have isolated address spaces",
+        "higher overhead"
+      ],
+      "agent": {
+        "answer": "Based primarily on the course sources, the key difference between threads and processes is their memory and communication model.\n\nAccording to the sources, threads **share the memory space of a process**, whereas separate processes have **isolated address spaces** [1]. This fundamental difference leads to two main consequences:\n\n1.  **Communication Overhead:** Because processes have isolated address spaces, they must communicate with \"higher overhead\" [1]. In contrast, threads can communicate more efficiently because they share memory.\n2.  **Context Switch Cost:** Context switches between threads are \"usually cheaper\" because threads share resources inside one process [1]. Switching between separate processes is more expensive.\n\n**General Background (not from sources):** More generally, a process is a heavyweight, independent execution unit with its own memory, file handles, and system resources. A thread is a lightweight unit of execution within a process; multiple threads in the same process can run concurrently and access the same global variables and data structures. This is why threads are often used for tasks that need to share data frequently (e.g., a web server handling multiple requests), while processes are used when strong isolation and fault tolerance are required (e.g., running separate applications).",
+        "source_count": 4,
+        "sources": [
+          {
+            "chunk_id": "doc-38-child-0",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Processes and Threads",
+            "text": "Threads share the memory space of a process, while separate processes have isolated address spaces and communicate with higher overhead. Context switches between threads are usually cheaper because threads share resources inside one process.",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-38-child-1",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Synchronization",
+            "text": "Locks, semaphores, and condition variables coordinate concurrent execution and protect shared data from race conditions. A lock enforces mutual exclusion, semaphores track available permits, and condition variables allow threads to wait for state changes.",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-38-child-2",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Virtual Memory",
+            "text": "Virtual memory gives each process the illusion of a large private address space while the operating system maps virtual addresses to physical memory. Page tables store translation metadata and enable address translation between virtual pages and physical frames.",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-38-child-3",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Page Replacement",
+            "text": "When physical memory is full, page replacement chooses a victim page to evict so another page can be loaded. Common policies include FIFO and LRU, which trade implementation simplicity against approximation quality.",
+            "score": 0.015625
+          }
+        ],
+        "key_point_hits": 2
+      },
+      "plain_llm": {
+        "answer": "Here’s a general explanation of how threads differ from processes, which should be helpful for an operating systems evaluation course.\n\n**1. Definition and Basic Structure**\n- **Process:** A process is an independent program in execution. It has its own separate memory space (code, data, heap, stack), system resources (like file handles), and a unique process ID. Processes are isolated from each other.\n- **Thread:** A thread is the smallest unit of execution within a process. Multiple threads can exist in the same process and share the process's memory space (code, data, heap) and resources. Each thread has its own private stack and register set.\n\n**2. Memory and Resource Sharing**\n- **Processes:** Do not share memory with other processes by default. Inter-process communication (IPC) mechanisms (pipes, shared memory, message queues) are required for them to exchange data. This isolation provides strong protection but adds overhead.\n- **Threads:** Share the same memory address space and resources (e.g., open files, sockets) of their parent process. This allows threads to communicate easily by reading/writing shared variables, but it also requires careful synchronization (e.g., mutexes, semaphores) to avoid race conditions.\n\n**3. Overhead and Creation Time**\n- **Processes:** Creating a new process (forking) is relatively heavy. The operating system must allocate a new memory space, copy process control blocks, and set up new resources. Context switching between processes is also slower because the CPU must save/load more state (memory maps, etc.).\n- **Threads:** Creating a thread is much lighter and faster. The OS only needs to allocate a new stack and thread control block within the existing process. Context switching between threads of the same process is faster because the memory mapping remains the same.\n\n**4. Fault Isolation**\n- **Processes:** One process crashing generally does not affect other processes. Each process runs in its own protected memory space, providing strong fault isolation.\n- **Threads:** If one thread crashes (e.g., due to a segmentation fault), it can bring down the entire process, killing all other threads in that process. Threads have weak fault isolation.\n\n**5. Communication**\n- **Processes:** Communication is slower and more complex (IPC).\n- **Threads:** Communication is fast and simple (direct memory access), but requires synchronization.\n\n**Summary Table:**\n\n| Feature | Process | Thread |\n| :--- | :--- | :--- |\n| **Memory Space** | Separate | Shared (within process) |\n| **Creation Overhead** | High | Low |\n| **Context Switch Speed** | Slow | Fast |\n| **Fault Isolation** | Strong (isolated) | Weak (can crash whole process) |\n| **Communication** | Complex (IPC) | Simple (shared memory) |\n| **Owns Resources** | Owns all resources | Shares parent process resources |\n\nIn short: **Processes are heavyweight, isolated units of execution, while threads are lightweight, cooperating units that share resources within a process.**",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 5,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 4
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is fully correct, explicitly grounded in the provided course sources (citing specific points like shared memory, isolated address spaces, higher overhead, and cheaper context switches), and directly addresses the key points from the reference answer. The plain LLM answer is also correct and comprehensive, but it lacks any reference to the course material, making it ungrounded and not course-specific. For a study assistant, the agent answer is more useful because it ties directly to the course content, helping students focus on what was taught."
+      }
+    },
+    {
+      "id": "sync-primitives",
+      "course_id": 20,
+      "question": "What are locks, semaphores, and condition variables used for?",
+      "query_type": "definition",
+      "reference_answer": "They coordinate concurrent execution and protect shared data.",
+      "key_points": [
+        "coordinate concurrent execution",
+        "protect shared data",
+        "race conditions"
+      ],
+      "agent": {
+        "answer": "Based primarily on the provided course sources, locks, semaphores, and condition variables are used to **coordinate concurrent execution and protect shared data from race conditions** [1].\n\nThe sources break down their specific roles as follows:\n- **Locks** enforce **mutual exclusion**, meaning they ensure that only one thread can access a critical section of code at a time [1].\n- **Semaphores** are used to **track available permits**, which is a way to control access to a limited number of resources [1].\n- **Condition variables** allow threads to **wait for state changes**, enabling them to pause execution until a specific condition is met (e.g., a queue is no longer empty) [1].\n\n**General background (not from the course sources):** These tools are essential for writing correct multithreaded programs. Without them, multiple threads accessing shared variables (like a counter or a list) can produce inconsistent or corrupted results. Locks provide the basic \"mutex\" (mutual exclusion) guarantee. Semaphores are more flexible and can be used for both mutual exclusion and signaling (e.g., a producer notifying a consumer). Condition variables are typically used *together with* a lock to allow a thread to atomically release the lock and wait, then re-acquire the lock when it is woken up.",
+        "source_count": 4,
+        "sources": [
+          {
+            "chunk_id": "doc-38-child-1",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Synchronization",
+            "text": "Locks, semaphores, and condition variables coordinate concurrent execution and protect shared data from race conditions. A lock enforces mutual exclusion, semaphores track available permits, and condition variables allow threads to wait for state changes.",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-38-child-0",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Processes and Threads",
+            "text": "Threads share the memory space of a process, while separate processes have isolated address spaces and communicate with higher overhead. Context switches between threads are usually cheaper because threads share resources inside one process.",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-38-child-2",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Virtual Memory",
+            "text": "Virtual memory gives each process the illusion of a large private address space while the operating system maps virtual addresses to physical memory. Page tables store translation metadata and enable address translation between virtual pages and physical frames.",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-38-child-3",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Page Replacement",
+            "text": "When physical memory is full, page replacement chooses a victim page to evict so another page can be loaded. Common policies include FIFO and LRU, which trade implementation simplicity against approximation quality.",
+            "score": 0.015625
+          }
+        ],
+        "key_point_hits": 3
+      },
+      "plain_llm": {
+        "answer": "Locks, semaphores, and condition variables are all synchronization mechanisms used in operating systems and concurrent programming to coordinate access to shared resources and manage the execution order of multiple threads or processes. Here’s a general explanation of what each is used for:\n\n- **Locks (or Mutexes)**: Locks are used to enforce mutual exclusion. They ensure that only one thread or process can access a critical section of code (e.g., a shared variable or data structure) at a time. This prevents race conditions where two threads might simultaneously modify the same data, leading to inconsistent results. A thread must acquire the lock before entering the critical section and release it when done.\n\n- **Semaphores**: Semaphores are more general synchronization tools that can control access to a finite number of identical resources (e.g., a pool of database connections). They maintain a counter representing the number of available resources. A thread decrements the counter (a \"wait\" or \"P\" operation) to acquire a resource, and increments it (a \"signal\" or \"V\" operation) to release it. Semaphores can also be used for signaling between threads (e.g., one thread waits for another to complete a task). Unlike locks, semaphores do not have an owner concept—any thread can signal a semaphore.\n\n- **Condition Variables**: Condition variables are used to make a thread wait until a particular condition (e.g., a queue is non-empty) becomes true. They are always used in conjunction with a lock (mutex). A thread typically acquires the lock, checks the condition, and if the condition is not met, it calls `wait` on the condition variable, which atomically releases the lock and puts the thread to sleep. When another thread changes the condition (e.g., adds an item to the queue), it calls `signal` or `broadcast` to wake up one or all waiting threads. The awakened thread then reacquires the lock and rechecks the condition.\n\nIn summary:\n- **Locks** provide mutual exclusion.\n- **Semaphores** manage access to a limited number of resources and can signal events.\n- **Condition variables** allow threads to wait for specific conditions to be met, enabling efficient coordination without busy-waiting.",
+        "key_point_hits": 1
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 5,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 4
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is fully correct, explicitly grounded in the provided course sources (with citations), and directly addresses the course-specific content, making it highly useful for study. The plain LLM answer is also correct and provides a thorough general explanation, but it lacks any reference to the course material, resulting in low groundedness and course specificity. For a study assistant that must align with course content, the agent answer is clearly superior."
+      }
+    },
+    {
+      "id": "virtual-memory-purpose",
+      "course_id": 20,
+      "question": "What is the purpose of virtual memory?",
+      "query_type": "definition",
+      "reference_answer": "It gives each process the illusion of a large private address space and maps virtual addresses to physical memory.",
+      "key_points": [
+        "illusion of a large private address space",
+        "maps virtual addresses to physical memory",
+        "page tables"
+      ],
+      "agent": {
+        "answer": "Based solely on the course sources, the purpose of virtual memory is to give each process the illusion of a large private address space while the operating system maps virtual addresses to physical memory [1]. This is achieved through page tables that store translation metadata and enable address translation between virtual pages and physical frames [1].\n\n**General background:** More broadly, virtual memory also provides memory protection (isolating processes from each other) and allows programs to use more memory than is physically available by swapping data to disk, though the provided sources do not explicitly mention these aspects.",
+        "source_count": 4,
+        "sources": [
+          {
+            "chunk_id": "doc-38-child-2",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Virtual Memory",
+            "text": "Virtual memory gives each process the illusion of a large private address space while the operating system maps virtual addresses to physical memory. Page tables store translation metadata and enable address translation between virtual pages and physical frames.",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-38-child-3",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Page Replacement",
+            "text": "When physical memory is full, page replacement chooses a victim page to evict so another page can be loaded. Common policies include FIFO and LRU, which trade implementation simplicity against approximation quality.",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-38-child-0",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Processes and Threads",
+            "text": "Threads share the memory space of a process, while separate processes have isolated address spaces and communicate with higher overhead. Context switches between threads are usually cheaper because threads share resources inside one process.",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-38-child-1",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Synchronization",
+            "text": "Locks, semaphores, and condition variables coordinate concurrent execution and protect shared data from race conditions. A lock enforces mutual exclusion, semaphores track available permits, and condition variables allow threads to wait for state changes.",
+            "score": 0.015625
+          }
+        ],
+        "key_point_hits": 3
+      },
+      "plain_llm": {
+        "answer": "Virtual memory is a memory management technique used by operating systems. Its primary purposes are:\n\n1. **Isolation and Protection**: Each process gets its own virtual address space, preventing one process from accessing or corrupting the memory of another process or the operating system itself.\n\n2. **Abstraction of Physical Memory**: It allows programs to use more memory than is physically available (RAM) by using disk space (e.g., a swap file or partition) as an extension. This enables large applications to run on systems with limited RAM.\n\n3. **Simplified Memory Management**: Programs see a large, contiguous block of memory, even if the underlying physical memory is fragmented. The operating system handles the mapping between virtual and physical addresses.\n\n4. **Efficient Sharing**: Multiple processes can share the same physical memory (e.g., shared libraries or memory-mapped files) while each sees its own virtual address space.\n\n5. **Demand Paging**: Only the parts of a program that are actually needed are loaded into physical memory, reducing memory usage and speeding up program loading.\n\nIn summary, virtual memory provides the illusion of a large, private, and contiguous memory space for each process, while the OS manages the actual allocation and protection of physical memory.",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 4,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 4
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is fully correct, explicitly grounded in the provided course sources, and directly addresses the key points (illusion of private address space, mapping, page tables). The plain LLM answer is correct in general but adds details (isolation, swapping, demand paging) not supported by the course material, making it less grounded and course-specific. For study purposes, the agent answer is more focused and reliable."
+      }
+    },
+    {
+      "id": "page-replacement",
+      "course_id": 20,
+      "question": "Why do operating systems need page replacement and what are common policies?",
+      "query_type": "procedure",
+      "reference_answer": "Page replacement is needed when physical memory is full; common policies include FIFO and LRU.",
+      "key_points": [
+        "physical memory is full",
+        "victim page",
+        "FIFO",
+        "LRU"
+      ],
+      "agent": {
+        "answer": "The course materials explain that page replacement is needed because physical memory is finite. When it becomes full, the operating system must select a \"victim page\" to evict in order to load a new page from disk [1]. This is a core part of virtual memory, which gives each process the illusion of a large, private address space while the OS manages the mapping between virtual pages and physical frames [2].\n\nRegarding common policies, the sources mention **FIFO** (First-In, First-Out) and **LRU** (Least Recently Used). These policies trade off implementation simplicity against how well they approximate the optimal choice of which page to evict [1].\n\n**General background:** The sources do not detail how these policies work or list other common algorithms. As background, FIFO evicts the page that was loaded longest ago, which is simple but can be inefficient. LRU evicts the page that has not been used for the longest time, which is more effective but more complex to implement. Other common policies not mentioned in the sources include the Clock (or Second-Chance) algorithm and the Optimal (or Belady's) algorithm, which is a theoretical benchmark.",
+        "source_count": 4,
+        "sources": [
+          {
+            "chunk_id": "doc-38-child-3",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Page Replacement",
+            "text": "When physical memory is full, page replacement chooses a victim page to evict so another page can be loaded. Common policies include FIFO and LRU, which trade implementation simplicity against approximation quality.",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-38-child-2",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Virtual Memory",
+            "text": "Virtual memory gives each process the illusion of a large private address space while the operating system maps virtual addresses to physical memory. Page tables store translation metadata and enable address translation between virtual pages and physical frames.",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-38-child-0",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Processes and Threads",
+            "text": "Threads share the memory space of a process, while separate processes have isolated address spaces and communicate with higher overhead. Context switches between threads are usually cheaper because threads share resources inside one process.",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-38-child-1",
+            "document_id": 38,
+            "filename": "os_eval.docx",
+            "page_number": null,
+            "section_title": "Synchronization",
+            "text": "Locks, semaphores, and condition variables coordinate concurrent execution and protect shared data from race conditions. A lock enforces mutual exclusion, semaphores track available permits, and condition variables allow threads to wait for state changes.",
+            "score": 0.015625
+          }
+        ],
+        "key_point_hits": 3
+      },
+      "plain_llm": {
+        "answer": "Here is a general explanation of why operating systems need page replacement and the common policies used.\n\n### Why Operating Systems Need Page Replacement\n\nOperating systems use a concept called **virtual memory**, which allows programs to use more memory than is physically available in RAM. This is achieved by dividing memory into fixed-size blocks called **pages** (in RAM) and **frames** (on disk). When a program tries to access a page that is not currently in physical RAM, a **page fault** occurs. The OS must then load that page from the disk (usually the swap space or page file) into a free frame in RAM.\n\nHowever, physical RAM is a limited resource. When all frames in RAM are occupied and a new page needs to be loaded, the OS must **evict** (remove) an existing page from RAM to make room for the new one. This process of deciding which page to evict is called **page replacement**.\n\nThe primary reasons page replacement is necessary are:\n\n1.  **Limited Physical Memory:** RAM is expensive and finite. Virtual memory allows the system to run large applications or many applications simultaneously by using disk space as an extension of RAM.\n2.  **Overcoming Memory Fragmentation:** Virtual memory helps manage fragmentation issues that can occur with physical memory allocation.\n3.  **Supporting Multiprogramming:** Multiple processes can run concurrently, each with its own virtual address space. The sum of all these virtual spaces can easily exceed physical RAM.\n4.  **Efficient Use of RAM:** The OS only keeps actively used pages in RAM. Infrequently used pages are stored on disk, freeing up RAM for pages that are currently needed.\n\nThe goal of a good page replacement policy is to minimize the number of future page faults by evicting the page that is **least likely to be used again in the near future**.\n\n### Common Page Replacement Policies\n\nHere are the most well-known page replacement algorithms, ranging from theoretical ideals to practical implementations:\n\n**1. Optimal Page Replacement (OPT or MIN)**\n- **How it works:** Evicts the page that will not be used for the longest period of time in the future.\n- **Pros:** Achieves the lowest possible page fault rate. It is the theoretical benchmark against which all other algorithms are compared.\n- **Cons:** **Impossible to implement in a real system** because it requires knowledge of future memory accesses. Used only for simulation and comparison.\n\n**2. First-In, First-Out (FIFO)**\n- **How it works:** Evicts the page that has been in memory the longest. It uses a simple queue.\n- **Pros:** Very simple to implement.\n- **Cons:** Can be inefficient. It may evict a frequently used page that has simply been in memory for a long time (e.g., a core kernel page). It also suffers from **Belady's Anomaly**, where increasing the number of frames can actually increase the page fault rate.\n\n**3. Least Recently Used (LRU)**\n- **How it works:** Evicts the page that has not been used for the longest period of time. It is based on the principle of **locality of reference** (recently used pages are likely to be used again soon).\n- **Pros:** Generally performs very well and is a good approximation of the Optimal algorithm. It does not suffer from Belady's Anomaly.\n- **Cons:** Implementing a perfect LRU is expensive in hardware (requiring timestamps or a stack to be updated on every memory access).\n\n**4. Clock (or Second-Chance) Algorithm**\n- **How it works:** A practical approximation of LRU. Pages are arranged in a circular list. Each page has a \"reference bit\" (set to 1 when the page is accessed). The clock hand sweeps through the list:\n    - If the reference bit is 1, it clears the bit (gives the page a \"second chance\") and moves on.\n    - If the reference bit is 0, that page is evicted.\n- **Pros:** Much more efficient to implement than pure LRU. Performs nearly as well in practice.\n- **Cons:** Slightly more complex than FIFO.\n\n**5. Least Frequently Used (LFU)**\n- **How it works:** Evicts the page that has been used the least often (has the smallest access count).\n- **Pros:** Keeps",
+        "key_point_hits": 2
+      },
+      "scores": {
+        "agent": {
+          "correctness": 4,
+          "groundedness": 4,
+          "course_specificity": 4,
+          "study_usefulness": 4
+        },
+        "plain_llm": {
+          "correctness": 5,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 5
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is grounded in the provided course materials, correctly citing the need for page replacement when physical memory is full and mentioning FIFO and LRU as common policies. It scores high on course_specificity because it directly references the sources. The plain_llm answer is more comprehensive and correct in general OS knowledge, but it lacks any grounding in the provided course materials and includes details (like Clock and Optimal algorithms) not mentioned in the sources. For a study assistant that must adhere to course content, the agent answer is preferred despite being less detailed."
+      }
+    }
+  ]
+}

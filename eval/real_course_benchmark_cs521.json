@@ -1,0 +1,141 @@
+{
+  "meta": {
+    "name": "cs521-real-course-benchmark",
+    "course_id": 1,
+    "course_name": "CS 521",
+    "course_term": "Spring 2026",
+    "course_description": "This course is about the tech foundation of blockchain"
+  },
+  "cases": [
+    {
+      "id": "secret-key-cryptography",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "definition",
+      "question": "How does secret-key cryptography work, and what is its main tradeoff?",
+      "gold_chunk_ids": ["doc-7-child-9", "doc-7-child-10"],
+      "reference_answer": "Secret-key cryptography uses one shared secret key for encryption and decryption, and its main tradeoff is difficult secure key distribution.",
+      "key_points": [
+        "single shared key",
+        "same secret key for encryption and decryption",
+        "key distribution is difficult"
+      ]
+    },
+    {
+      "id": "hash-pointer",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "definition",
+      "question": "What is a hash pointer and why is it useful in blockchains?",
+      "gold_chunk_ids": ["doc-7-child-30", "doc-7-child-34"],
+      "reference_answer": "A hash pointer stores both a location and a hash of the referenced data, so it enables tamper detection and is useful for blockchain-linked structures and Merkle trees.",
+      "key_points": [
+        "stores location plus hash",
+        "tamper detection",
+        "useful for blockchains"
+      ]
+    },
+    {
+      "id": "early-digital-currency-failures",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "comparison",
+      "question": "Why did many early digital currencies fail before Bitcoin?",
+      "gold_chunk_ids": ["doc-20-child-3"],
+      "reference_answer": "They failed because of problems such as merchant adoption, centralization, double spending, and consensus.",
+      "key_points": [
+        "merchant adoption",
+        "centralization",
+        "double spending",
+        "consensus"
+      ]
+    },
+    {
+      "id": "utxo-model",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "definition",
+      "question": "What is the UTXO model in Bitcoin?",
+      "gold_chunk_ids": ["doc-20-child-17"],
+      "reference_answer": "Bitcoin uses Unspent Transaction Outputs instead of account balances; spending works more like handing over bills and receiving change.",
+      "key_points": [
+        "unspent transaction outputs",
+        "does not use account balances",
+        "like paying with bills"
+      ]
+    },
+    {
+      "id": "ethereum-gas",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "procedure",
+      "question": "How does gas prevent denial-of-service or infinite loops in Ethereum?",
+      "gold_chunk_ids": ["doc-23-child-12", "doc-23-child-14"],
+      "reference_answer": "Gas meters every computational step, so attackers must pay proportionally for computation; this prevents infinite loops and DoS attacks.",
+      "key_points": [
+        "every computational step costs gas",
+        "pay proportionally for computation",
+        "prevents infinite loops",
+        "prevents DoS"
+      ]
+    },
+    {
+      "id": "ethereum-three-tries",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "definition",
+      "question": "What are Ethereum's three tries used for?",
+      "gold_chunk_ids": ["doc-23-child-26", "doc-23-child-27"],
+      "reference_answer": "Ethereum uses a state trie for account state, a transaction trie to prove transaction inclusion, and a receipt trie to prove execution results.",
+      "key_points": [
+        "state trie",
+        "transaction trie",
+        "receipt trie"
+      ]
+    },
+    {
+      "id": "consensus-properties",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "definition",
+      "question": "What are the core properties of consensus?",
+      "gold_chunk_ids": ["doc-36-child-7"],
+      "reference_answer": "The core properties are agreement, validity, and termination.",
+      "key_points": [
+        "agreement",
+        "validity",
+        "termination"
+      ]
+    },
+    {
+      "id": "two-generals-impossibility",
+      "course_id": 1,
+      "course_name": "CS 521",
+      "course_term": "Spring 2026",
+      "course_description": "This course is about the tech foundation of blockchain",
+      "query_type": "reasoning",
+      "question": "Why is agreement impossible in the Two Generals problem?",
+      "gold_chunk_ids": ["doc-36-child-10", "doc-36-child-11"],
+      "reference_answer": "Agreement is impossible because after every message, the sender remains uncertain whether the last acknowledgment arrived, so common knowledge cannot be achieved in finite rounds.",
+      "key_points": [
+        "sender remains uncertain",
+        "last message may not have arrived",
+        "common knowledge is impossible"
+      ]
+    }
+  ]
+}

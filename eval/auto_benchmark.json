@@ -1,0 +1,83 @@
+{
+  "meta": {
+    "name": "auto-os-eval-benchmark",
+    "username": "eval_1778357270",
+    "password": "pass123",
+    "course_id": 20
+  },
+  "cases": [
+    {
+      "id": "threads-vs-processes",
+      "course_id": 20,
+      "course_name": "OS Eval 1778357270",
+      "course_term": "Spring 2026",
+      "course_description": "Operating systems evaluation benchmark course.",
+      "query_type": "comparison",
+      "question": "How do threads differ from processes?",
+      "gold_chunk_ids": [
+        "doc-38-child-0"
+      ],
+      "reference_answer": "Threads share memory and resources inside a process, while processes isolate address spaces and usually communicate with more overhead.",
+      "key_points": [
+        "threads share memory",
+        "processes have isolated address spaces",
+        "higher overhead"
+      ]
+    },
+    {
+      "id": "sync-primitives",
+      "course_id": 20,
+      "course_name": "OS Eval 1778357270",
+      "course_term": "Spring 2026",
+      "course_description": "Operating systems evaluation benchmark course.",
+      "query_type": "definition",
+      "question": "What are locks, semaphores, and condition variables used for?",
+      "gold_chunk_ids": [
+        "doc-38-child-1"
+      ],
+      "reference_answer": "They coordinate concurrent execution and protect shared data.",
+      "key_points": [
+        "coordinate concurrent execution",
+        "protect shared data",
+        "race conditions"
+      ]
+    },
+    {
+      "id": "virtual-memory-purpose",
+      "course_id": 20,
+      "course_name": "OS Eval 1778357270",
+      "course_term": "Spring 2026",
+      "course_description": "Operating systems evaluation benchmark course.",
+      "query_type": "definition",
+      "question": "What is the purpose of virtual memory?",
+      "gold_chunk_ids": [
+        "doc-38-child-2"
+      ],
+      "reference_answer": "It gives each process the illusion of a large private address space and maps virtual addresses to physical memory.",
+      "key_points": [
+        "illusion of a large private address space",
+        "maps virtual addresses to physical memory",
+        "page tables"
+      ]
+    },
+    {
+      "id": "page-replacement",
+      "course_id": 20,
+      "course_name": "OS Eval 1778357270",
+      "course_term": "Spring 2026",
+      "course_description": "Operating systems evaluation benchmark course.",
+      "query_type": "procedure",
+      "question": "Why do operating systems need page replacement and what are common policies?",
+      "gold_chunk_ids": [
+        "doc-38-child-3"
+      ],
+      "reference_answer": "Page replacement is needed when physical memory is full; common policies include FIFO and LRU.",
+      "key_points": [
+        "physical memory is full",
+        "victim page",
+        "FIFO",
+        "LRU"
+      ]
+    }
+  ]
+}

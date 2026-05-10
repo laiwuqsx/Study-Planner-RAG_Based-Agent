@@ -1,0 +1,51 @@
+{
+  "meta": {
+    "name": "os-course-benchmark-template",
+    "description": "Template for retrieval and end-to-end evaluation cases."
+  },
+  "cases": [
+    {
+      "id": "threads-vs-processes",
+      "course_id": 1,
+      "course_name": "Operating Systems",
+      "course_term": "Spring 2026",
+      "course_description": "Processes, threads, synchronization, memory, and file systems.",
+      "query_type": "comparison",
+      "question": "How do threads differ from processes?",
+      "gold_chunk_ids": [
+        "replace-with-gold-child-chunk-id-1",
+        "replace-with-gold-child-chunk-id-2"
+      ],
+      "gold_parent_chunk_ids": [],
+      "gold_root_chunk_ids": [],
+      "reference_answer": "Threads share a process address space and resources, while processes are isolated and communicate with more overhead.",
+      "key_points": [
+        "threads share memory",
+        "processes have isolated address spaces",
+        "process communication has more overhead"
+      ],
+      "grading_notes": "A strong answer should mention memory sharing, isolation, and the performance or communication tradeoff."
+    },
+    {
+      "id": "locks-semaphores-condition-variables",
+      "course_id": 1,
+      "course_name": "Operating Systems",
+      "course_term": "Spring 2026",
+      "course_description": "Processes, threads, synchronization, memory, and file systems.",
+      "query_type": "definition",
+      "question": "What are locks, semaphores, and condition variables used for?",
+      "gold_chunk_ids": [
+        "replace-with-gold-child-chunk-id-3"
+      ],
+      "gold_parent_chunk_ids": [],
+      "gold_root_chunk_ids": [],
+      "reference_answer": "They are synchronization primitives used to coordinate concurrent execution and protect shared resources.",
+      "key_points": [
+        "synchronization primitives",
+        "coordinate concurrent execution",
+        "protect shared resources"
+      ],
+      "grading_notes": "A weak answer only lists the terms. A strong answer explains why they matter in concurrency."
+    }
+  ]
+}

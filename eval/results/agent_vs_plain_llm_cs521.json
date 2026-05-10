@@ -1,0 +1,699 @@
+{
+  "benchmark_name": "cs521-real-course-benchmark",
+  "judge_mode": "llm",
+  "retrieval_mode": "hybrid",
+  "top_k": 5,
+  "wins": {
+    "agent": 7,
+    "plain_llm": 1,
+    "tie": 0
+  },
+  "agent_average": {
+    "correctness": 4.625,
+    "groundedness": 4.5,
+    "course_specificity": 4.5,
+    "study_usefulness": 4.5
+  },
+  "plain_llm_average": {
+    "correctness": 4.125,
+    "groundedness": 1.125,
+    "course_specificity": 1.125,
+    "study_usefulness": 3.875
+  },
+  "cases": [
+    {
+      "id": "secret-key-cryptography",
+      "course_id": 1,
+      "question": "How does secret-key cryptography work, and what is its main tradeoff?",
+      "query_type": "definition",
+      "reference_answer": "Secret-key cryptography uses one shared secret key for encryption and decryption, and its main tradeoff is difficult secure key distribution.",
+      "key_points": [
+        "single shared key",
+        "same secret key for encryption and decryption",
+        "key distribution is difficult"
+      ],
+      "agent": {
+        "answer": "Based solely on the provided course sources, the materials do not directly explain how secret-key cryptography works or define its main tradeoff. The sources focus exclusively on **public-key cryptography**, specifically the Schnorr protocol and Schnorr signatures [1][2][3].\n\n**What the course materials support:**\nThe sources describe a public-key system where a **secret key (x)** is used to create signatures, and a corresponding **public key (h = gˣ)** is used for verification [2][3]. The security of this system relies on the assumption that computing the discrete log (finding `x` from `h`) is hard [4]. The main tradeoff discussed in this context is between the **efficiency of verification** (which is easy using modular arithmetic) and the **hardness of breaking the system** (which relies on the discrete log problem) [4].\n\n**General background (not from the sources):**\nSecret-key cryptography (also called symmetric cryptography) works differently. It uses a **single shared key** that both the sender and receiver must keep secret. The same key is used to encrypt and decrypt data. The main tradeoff is **key distribution**: how do two parties securely share the secret key in the first place? This is efficient for encryption/decryption (fast algorithms like AES) but creates a logistical challenge for securely exchanging the key, especially over an insecure channel. This contrasts with public-key cryptography, which solves the key distribution problem but is generally slower.",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-37-child-12",
+            "document_id": 37,
+            "filename": "cs521 - Topic 6.pdf",
+            "page_number": 9,
+            "section_title": "Schnorr Protocol: Soundness",
+            "text": "challenge e’, response d’ where d’ = e’ · x + r Subtracting: d − d’ = (e − e’) · x, so we can recover the secret: 𝑥 = (𝑑 − 𝑑’) / (𝑒 − 𝑒’) 𝑚𝑜𝑑 𝑝 Therefore, anyone who can convince Verifier must actually know x (a “knowledge extractor” can recover it)",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-37-child-14",
+            "document_id": 37,
+            "filename": "cs521 - Topic 6.pdf",
+            "page_number": 10,
+            "section_title": "Schnorr Signatures via Fiat-Shamir Transform",
+            "text": "message m using public key h: 1. Reconstruct the commitment: ρ = 𝑔𝑑 · ℎ−𝑒 (computing h to the power −e is efficient: just invert e mod p, then exponentiate) 2. Check e = H(ρ ‖ m) Applications: basis for EdDSA (Ed25519), used in SSH, TLS, cryptocurrency wallets, and blockchain transaction signing",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-37-child-13",
+            "document_id": 37,
+            "filename": "cs521 - Topic 6.pdf",
+            "page_number": 10,
+            "section_title": "Schnorr Signatures via Fiat-Shamir Transform",
+            "text": "Key idea: make Schnorr non-interactive by replacing Verifier’s random challenge with a hash (Fiat-Shamir heuristic) Signer (Prover) signs message m using secret key x: 1. Pick random r ∈ ℤₚ, compute commitment ρ = 𝑔𝑟 2. Compute challenge e = H(ρ ‖ m) ← replaces Verifier’s random challenge 3. Compute response d = e · x + r mod p. Signature = (e, d) Anyone (Verifier) verifies (e, d) on message m using public key h: 1. Reconstruct the commitment: ρ = 𝑔𝑑 · ℎ−𝑒 (computing h to the power",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-37-child-15",
+            "document_id": 37,
+            "filename": "cs521 - Topic 6.pdf",
+            "page_number": 11,
+            "section_title": "Why Is Computing Inverses Easy?",
+            "text": "To verify a Schnorr signature, we need ℎ−𝑒. Is this hard? No — two simple steps: 1. Modular inversion: compute −e mod p = p − e (one subtraction) 2. Modular exponentiation: compute ℎ𝑝−𝑒 via repeated squaring — O(log p) multiplications Why this works: By Fermat’s Little Theorem, ℎ𝑝 = ℎ in a group of order p, so: ℎ−𝑒 = ℎ𝑝−𝑒 Key contrast: computing ℎ−𝑒 is easy (polynomial time), but computing the discrete log x from ℎ = 𝑔𝑥 is believed to be hard",
+            "score": 0.015625
+          },
+          {
+            "chunk_id": "doc-37-child-5",
+            "document_id": 37,
+            "filename": "cs521 - Topic 6.pdf",
+            "page_number": 4,
+            "section_title": "𝐹.",
+            "text": "Naïve solution: Prover sends 𝑎1, 𝑎2, … , 𝑎𝑛 (expensive, violates privacy, etc) Good solution: Verifier sends Prover random element 𝑟 ∈ 𝐹 Prover sends Verifier ℎ = σ𝑖=1 𝑛 𝑎𝑖 · 𝑟𝑖−1 Verifier checks received ℎ against its locally computed σ𝑖=1 𝑛 𝑎𝑖 · 𝑟𝑖−1",
+            "score": 0.015384615384615385
+          }
+        ],
+        "key_point_hits": 1
+      },
+      "plain_llm": {
+        "answer": "Of course. Here's a general explanation of secret-key cryptography and its main tradeoff, suitable for a course on the tech foundations of blockchain.\n\n**How Secret-Key Cryptography Works**\n\nSecret-key cryptography, also known as symmetric-key cryptography, uses a single shared secret key for both encryption and decryption. The process works as follows:\n\n1. **Key Generation:** Two parties (e.g., Alice and Bob) agree on a secret key in advance, through a secure channel. This key is a random string of bits (e.g., 128 or 256 bits long).\n\n2. **Encryption:** The sender (Alice) uses the secret key and an encryption algorithm (like AES, ChaCha20) to transform plaintext (readable data) into ciphertext (scrambled, unreadable data).\n\n3. **Decryption:** The receiver (Bob) uses the same secret key and the corresponding decryption algorithm to reverse the process, turning the ciphertext back into the original plaintext.\n\nThe security relies on the fact that without the secret key, an attacker cannot feasibly recover the plaintext from the ciphertext, even if they know the algorithm.\n\n**Main Tradeoff: Key Distribution vs. Performance**\n\nThe primary tradeoff of secret-key cryptography is between **high performance** and **the difficulty of secure key distribution**.\n\n- **Advantage (Performance):** Symmetric algorithms are extremely fast and efficient, even for large amounts of data. This makes them ideal for encrypting bulk data, such as blockchain transaction payloads or communication channels.\n\n- **Disadvantage (Key Distribution):** Both parties must share the same secret key *before* they can communicate securely. This creates a \"chicken-and-egg\" problem: how do you securely exchange the key over an insecure channel (like the internet)? If the key is intercepted during distribution, the entire system is compromised. This is why, in practice, secret-key cryptography is often combined with public-key cryptography (asymmetric) to securely exchange the symmetric key, or used in scenarios where a secure channel already exists.\n\nIn the context of blockchain, secret-key cryptography is often used for hashing (though hashing is distinct from encryption) and for encrypting data within private transactions, while public-key cryptography handles identity and key exchange.",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 3,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 2
+        },
+        "plain_llm": {
+          "correctness": 5,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 5
+        },
+        "preferred_system": "plain_llm",
+        "rationale": "The agent answer correctly notes that the course materials do not cover secret-key cryptography, but it then provides a general explanation that is accurate and addresses the question. However, it loses points for groundedness and course_specificity because it explicitly states the sources do not support the answer. The plain_llm answer gives a thorough, correct, and well-structured explanation of secret-key cryptography and its main tradeoff, which is highly useful for study. Both answers lack direct grounding in the provided course materials, but the plain_llm answer is more complete and directly answers the question without relying on irrelevant sources."
+      }
+    },
+    {
+      "id": "hash-pointer",
+      "course_id": 1,
+      "question": "What is a hash pointer and why is it useful in blockchains?",
+      "query_type": "definition",
+      "reference_answer": "A hash pointer stores both a location and a hash of the referenced data, so it enables tamper detection and is useful for blockchain-linked structures and Merkle trees.",
+      "key_points": [
+        "stores location plus hash",
+        "tamper detection",
+        "useful for blockchains"
+      ],
+      "agent": {
+        "answer": "Based primarily on the course sources, a hash pointer is a data structure that links blocks in a blockchain by storing the hash of the previous block. This is described as a \"linked list of hash pointers\" used to \"enforce total order on blocks\" [4]. The key property is that the hash acts as a cryptographic commitment: if any data in a previous block is tampered with, the hash stored in the subsequent block will no longer match, making the tampering detectable.\n\nThe sources highlight several reasons why hash pointers are useful in blockchains:\n\n1.  **Tamper Detection:** By retaining only the root hash of a Merkle tree (which is itself built from hash pointers), you can \"detect tampering in any leaf\" [1]. Similarly, the chain of block headers uses hash pointers so that any change to a past block is immediately evident when checking the chain [4].\n2.  **Efficient Proofs:** Hash pointers enable efficient cryptographic proofs. For example, in a Merkle tree (which is a \"binary tree of hash pointers\"), you can provide a \"Proof of Membership\" in O(log n) time by supplying only the sibling hashes along the path from the leaf to the root [1]. This is used in blockchains where \"each block’s data section organizes transactions into a Merkle tree – the root hash goes in the block header\" [1].\n3.  **Commitment to Data:** The root hash of a Merkle tree (or a Merkle Patricia Trie) serves as a \"cryptographic commitment to data set\" [3]. This means a small hash (e.g., in the block header) can commit to a large amount of data (e.g., all transactions or the entire state), and the data can later be verified against that hash [2].\n4.  **Deterministic Structure:** In Ethereum's Modified Merkle Patricia Trie, the structure is deterministic: \"same data → same root hash\" [2]. This allows nodes to independently compute the same root hash and agree on the state of the system.\n\n**General Background (not from sources):** More generally, a hash pointer is simply a pointer (like a memory address or a block reference) combined with a cryptographic hash of the data it points to. This allows you to both locate the data and verify that it hasn't been altered. In a blockchain, each block contains a hash pointer to the previous block, forming a chain where",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-7-child-41",
+            "document_id": 7,
+            "filename": "cs521 - Topic 2.pdf",
+            "page_number": 26,
+            "section_title": "Tx0 Tx1 Tx2 Tx3",
+            "text": "• Binary tree of hash pointers – only need to retain the root hash to detect tampering in any leaf • Proof of Membership: to verify Tx1 is in the tree, provide H0, H23, and root – verifier recomputes upward in O(log n) • Proof of Non-membership: with a sorted Merkle tree, show that a value falls between two consecutive leaves – also O(log n) • Blockchain use: each block’s data section organizes transactions into a Merkle tree – the root hash goes in the block header 1 2 3",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-23-child-25",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 20,
+            "section_title": "Modified Merkle Patricia Trie (MPT)",
+            "text": "• Combines three ideas: – 1. Trie – deterministic key→value lookups – 2. Patricia – path compression, saves space – 3. Merkle – nodes store hash of children • “Modified” = Ethereum’s variant: – 16-way branching (one per nibble) – Node types: branch, extension, leaf, empty – Keys/values serialized before hashing – Root hash = Keccak-256 of entire trie • Why blockchains need this: – Root hash in header commits to all data – O(log n) proof verifies any key-value pair – Deterministic: same data → same root hash",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-23-child-26",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 21,
+            "section_title": "Ethereum’s Three Tries",
+            "text": "• Each block header stores three trie root hashes: – Root hash = cryptographic commitment to data set • State Trie – persistent across blocks, updated not rebuilt – Maps account address → account data (nonce, balance, …) – Only rehash changed leaf-to-root path (O(log n)) – Merkle proofs: verify any account without full state • Transaction Trie – rebuilt fresh each block – Maps tx index → transaction data for that block – Proves a transaction was included in a block • Receipt Trie – rebuilt fresh each block",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-20-child-10",
+            "document_id": 20,
+            "filename": "cs521 - Topic 3.pdf",
+            "page_number": 10,
+            "section_title": "Timestamp Servers: Blocks and Total Orders",
+            "text": "• Put each transaction in a totally-ordered block of transactions – The only way transactions get communicated • Linked list of hash pointers to enforce total order on blocks: • Problem of divergence remains, but lifted from transactions to blocks • Need to enforce total order on blocks; in a decentralized way",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-20-child-14",
+            "document_id": 20,
+            "filename": "cs521 - Topic 3.pdf",
+            "page_number": 12,
+            "section_title": "Decentralized Network",
+            "text": "already spent 6. Nodes express their acceptance of the block by working on creating the next block in the chain, using the hash of the accepted block as the previous hash • Nodes always consider the longest chain • Economic incentive: – First transaction in the block (also called coinbase), is a new coin owned by the block creator / proposer / miner",
+            "score": 0.015625
+          }
+        ],
+        "key_point_hits": 1
+      },
+      "plain_llm": {
+        "answer": "Certainly! Here's a clear explanation of what a hash pointer is and why it's useful in blockchains, based on general knowledge of the technology.\n\n**What is a hash pointer?**\n\nA hash pointer is a data structure that consists of two parts:\n1. A **pointer** to where some data is stored (e.g., a memory address or a reference to a block).\n2. A **cryptographic hash** of that data.\n\nUnlike a regular pointer, which simply tells you where to find data, a hash pointer also allows you to verify that the data hasn't been tampered with. You can follow the pointer to retrieve the data, then compute its hash and compare it to the stored hash. If they match, the data is intact; if not, you know it has been altered.\n\n**Why is it useful in blockchains?**\n\nHash pointers are a foundational building block of blockchain technology. Here are the key reasons they are so important:\n\n1. **Tamper-evident linking (immutability):** In a blockchain, each block contains a hash pointer to the previous block. This creates a chain where any change to a block (even a tiny one) will change its hash. Since the next block stores that hash, the tampering is immediately detectable. This makes the entire history of the blockchain immutable and verifiable.\n\n2. **Efficient verification:** Instead of storing entire copies of previous data, you only need to store a small hash. This saves space while still allowing anyone to verify the integrity of the entire chain by starting from the first block (the genesis block) and checking each hash pointer along the way.\n\n3. **Support for Merkle trees:** Hash pointers are also used in Merkle trees, which are data structures that efficiently summarize and verify large sets of transactions. Each leaf node contains a transaction hash, and internal nodes contain hash pointers to their children. This allows a node to prove that a specific transaction is included in a block without downloading the entire block.\n\n4. **Decentralized trust:** Because hash pointers make tampering obvious, participants in a blockchain network don't need to trust a central authority. They can independently verify the integrity of the data by following the hash pointers and checking the hashes.\n\nIn summary, a hash pointer is a simple but powerful tool that ensures data integrity and enables the trustless, tamper-proof nature of blockchains.",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 4,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 4
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is fully correct, explicitly grounded in the provided course sources with specific citations, and directly addresses the course-specific concepts (e.g., Merkle trees, tamper detection, efficient proofs). The plain LLM answer is generally correct but lacks any grounding in the course material, making it less useful for a study assistant that relies on the given sources. The agent answer also provides more detailed and course-relevant explanations, enhancing study usefulness."
+      }
+    },
+    {
+      "id": "early-digital-currency-failures",
+      "course_id": 1,
+      "question": "Why did many early digital currencies fail before Bitcoin?",
+      "query_type": "comparison",
+      "reference_answer": "They failed because of problems such as merchant adoption, centralization, double spending, and consensus.",
+      "key_points": [
+        "merchant adoption",
+        "centralization",
+        "double spending",
+        "consensus"
+      ],
+      "agent": {
+        "answer": "Based primarily on the course sources, many early digital currencies failed because they could not solve the **double-spending problem** in a decentralized way, which was the core challenge of creating peer-to-peer digital money.\n\nThe sources explain that while **digital signatures** were a promising direction for digital cash, the \"double-spending riddle could not be solved\" [1]. The double-spending problem is the risk that a digital coin could be copied and spent multiple times [2][4]. A centralized system (like a bank) can easily prevent this, but that \"defies the purpose\" of a truly peer-to-peer system without intermediaries [1][2].\n\nThe course materials list several early attempts—including DigiCash, Hashcash, Bit Gold, and B-Money—and state that they \"all failed\" [3]. The key insight that solved this problem, and which Bitcoin succeeded with, was Satoshi Nakamoto's use of **Proof of Work (PoW)** to achieve decentralized consensus and prevent double-spending [4]. The earlier systems lacked this decentralized solution.\n\n**General background:** While the sources don't detail the specific failure modes of each listed currency, they collectively failed for reasons related to this core challenge. For example, DigiCash and E-gold relied on centralized servers, making them vulnerable to shutdown or censorship. Others like Hashcash and Bit Gold were theoretical proposals that lacked a complete, working system for decentralized consensus and incentive alignment, which Bitcoin's combination of PoW and a blockchain successfully provided.",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-20-child-7",
+            "document_id": 20,
+            "filename": "cs521 - Topic 3.pdf",
+            "page_number": 7,
+            "section_title": "Bitcoin’s Goal",
+            "text": "• Peer-to-peer digital money – No intermediaries (banks, centralized parties) • Digital signatures were clearly the right direction – But the double-spending riddle could not be solved – Centralized / intermediary can solve double-spending, but defies the purpose",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-20-child-4",
+            "document_id": 20,
+            "filename": "cs521 - Topic 3.pdf",
+            "page_number": 4,
+            "section_title": "Double Spend attack",
+            "text": "• A simple attack: • When one person can use the same coin multiple times to buy things • Easily solved with a centralized system • Much harder when decentralized",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-20-child-2",
+            "document_id": 20,
+            "filename": "cs521 - Topic 3.pdf",
+            "page_number": 2,
+            "section_title": "Early Cryptographic Digital Currencies ... All Failed",
+            "text": "• DigiCash (David Chaum) - 1989 • Mondex (National Westminster Bank) - 1993 • CyberCash (Lynch, Melton, Crocker & Wilson) - 1994 • E-gold (Gold & Silver Reserve) - 1996 • Hashcash (Adam Back) - 1997 • Bit Gold (Nick Szabo) - 1998 • B-Money (Wei Dai) - 1998 • Lucre (Ben Laurie) - 1999",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-36-child-20",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 18,
+            "section_title": "The Double-Spend Problem",
+            "text": "• The core challenge of digital cash – Digital data can be copied – how prevent spending the same coin twice? – Centralized fix: a trusted bank; Satoshi’s insight: use Proof of Work (PoW)",
+            "score": 0.015625
+          },
+          {
+            "chunk_id": "doc-23-child-43",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 31,
+            "section_title": "Ethereum vs. Bitcoin: How It All Fits Together",
+            "text": "since EIP- 1559 • Purpose: peer-to-peer electronic cash vs. general-purpose world computer – Digital gold vs. decentralized application platform • Both are decentralized, permissionless, and secured by cryptographic primitives",
+            "score": 0.015384615384615385
+          }
+        ],
+        "key_point_hits": 2
+      },
+      "plain_llm": {
+        "answer": "Based on general knowledge of the history of digital currencies, many early attempts before Bitcoin failed for several key technical and economic reasons:\n\n1.  **The Double-Spending Problem:** Early digital currencies relied on a central authority (like a company or a bank) to verify that the same digital token wasn't spent twice. If that central server was compromised, shut down, or the company went bankrupt, the entire currency system collapsed. Bitcoin solved this with a decentralized, distributed ledger (the blockchain) and a consensus mechanism (Proof-of-Work).\n\n2.  **Centralization and Single Points of Failure:** Systems like **e-gold** and **DigiCash** were centralized. This made them vulnerable to government shutdowns, legal challenges, and internal fraud. For example, e-gold was shut down by the U.S. government for facilitating money laundering. A centralized system is also a single target for hackers.\n\n3.  **Lack of Trust and Anonymity Issues:** Some early systems (like **Ecash** by David Chaum) offered strong privacy but required users to trust a central bank to issue and redeem the currency. Others were too anonymous, attracting illegal activity and subsequent legal crackdowns, or not anonymous enough, failing to attract users who valued privacy.\n\n4.  **Inflation and Supply Control:** Many early digital currencies had no fixed or transparent supply cap. The issuing company could create new units at will, leading to inflation and a loss of user trust. Bitcoin's hard cap of 21 million coins was a revolutionary feature that guaranteed scarcity.\n\n5.  **Technical Immaturity and Scalability:** The internet infrastructure of the 1990s and early 2000s was slower and less reliable. Early systems often struggled with transaction speed, user-friendliness, and security against basic hacking attempts.\n\n6.  **Lack of a Built-In Incentive System:** Early systems had no way to incentivize a decentralized network of participants to maintain and secure the network. Bitcoin's mining reward (new coins + transaction fees) created a self-sustaining economic incentive for people all over the world to contribute computing power to secure the network.\n\nIn summary, early digital currencies failed primarily because they were centralized, had no solution to the double-spending problem without a trusted third party, and lacked a robust, decentralized incentive structure. Bitcoin's key innovation was combining existing technologies (cryptography, peer-to-peer networks, proof-of-work) into a system that solved these fundamental problems.",
+        "key_point_hits": 3
+      },
+      "scores": {
+        "agent": {
+          "correctness": 4,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 4
+        },
+        "plain_llm": {
+          "correctness": 5,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 5
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is highly grounded in the provided course sources, explicitly citing them for key points like double-spending, decentralized consensus, and the failure of early systems. It directly addresses the reference answer's key points (double spending, consensus, centralization) with course-specific evidence, making it excellent for study purposes within the course context. The plain LLM answer is factually correct and comprehensive, but it lacks any grounding in the course material, which is critical for a study assistant that must align with the curriculum. Therefore, the agent is preferred for its course specificity and groundedness, despite the plain LLM's broader correctness and usefulness for general knowledge."
+      }
+    },
+    {
+      "id": "utxo-model",
+      "course_id": 1,
+      "question": "What is the UTXO model in Bitcoin?",
+      "query_type": "definition",
+      "reference_answer": "Bitcoin uses Unspent Transaction Outputs instead of account balances; spending works more like handing over bills and receiving change.",
+      "key_points": [
+        "unspent transaction outputs",
+        "does not use account balances",
+        "like paying with bills"
+      ],
+      "agent": {
+        "answer": "Based on the course materials, the UTXO (Unspent Transaction Output) model is the state model used by Bitcoin, which differs fundamentally from Ethereum's account-based model [1][3].\n\n**What the course materials say:**\n\n- **No account balances:** Bitcoin does not use account balances. Instead, it uses Unspent Transaction Outputs (UTXOs) [2].\n- **Analogy:** The model is like paying with physical bills: you hand over a $20 bill and receive change back [2].\n- **Stateless nature:** The UTXO model is described as \"stateless\" because UTXOs are either spent or unspent, with no persistent variables or multi-stage contracts [1][4].\n- **Limitations:** The course notes that this model contributes to Bitcoin's limitations, including:\n  - **Value-blindness:** UTXOs are all-or-nothing, meaning you cannot have fine-grained control over withdrawal amounts [4].\n  - **Lack of state:** There are no multi-stage contracts or persistent variables [4].\n- **Comparison to Ethereum:** Bitcoin's UTXO model is contrasted with Ethereum's \"stateful\" account model, which supports complex interactions and smart contracts [1][3].\n\n**General background (not from the sources):**\n\nMore generally, in the UTXO model, each transaction consumes one or more existing UTXOs as inputs and creates new UTXOs as outputs. A user's \"balance\" is simply the sum of all UTXOs they can unlock (i.e., that are associated with their public key). This design enhances privacy and parallel processing but makes it harder to implement complex logic like smart contracts.",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-23-child-5",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 5,
+            "section_title": "Ethereum: A Programmable Blockchain",
+            "text": "Ethereum as a State Transition System • State: mapping from addresses (160-bit) to account states – Every account has: nonce, balance, storage root, code hash • State transition function: APPLY(S, TX) → S’ or ERROR – Validates signature, deducts gas fees, runs code, refunds unused gas • Transactions morph the state incrementally, block by block • Key difference from Bitcoin: – Bitcoin = UTXO model (stateless); Ethereum = account model (stateful) • Ethereum blocks contain both the transaction list AND the most recent state (root hash) • State stored in",
+            "score": 0.032266458495966696
+          },
+          {
+            "chunk_id": "doc-20-child-17",
+            "document_id": 20,
+            "filename": "cs521 - Topic 3.pdf",
+            "page_number": 15,
+            "section_title": "A Concrete Transaction: The UTXO Model",
+            "text": "Bitcoin does not use account balances – It uses Unspent Transaction Outputs (UTXOs) – Like paying with bills: you hand over a $20, get change back",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-23-child-42",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 31,
+            "section_title": "Ethereum vs. Bitcoin: How It All Fits Together",
+            "text": "• State model: UTXO (Bitcoin) vs. Accounts (Ethereum) – Stateless vs. stateful; simple transfers vs. complex interactions • Scripting: limited stack-based (Bitcoin) vs. Turing-complete EVM (Ethereum) • Consensus: PoW (Bitcoin) vs. PoS (Ethereum, since 2022) • Block time: ~10 min (Bitcoin) vs. ~12 sec (Ethereum) • Data in blocks: transactions only (Bitcoin) vs. transactions + state root (Ethereum) • Supply: capped at 21M BTC vs. no hard cap, but deflationary since EIP- 1559 • Purpose: peer-to-peer electronic cash vs. general-purpose world computer – Digital gold vs. decentralized application platform •",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-23-child-2",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 2,
+            "section_title": "Bitcoin’s Limitations – Why Something More?",
+            "text": "• Lack of Turing-completeness – Script language supports no loops; simulating them requires duplicating code • Value-blindness – UTXO is all-or-nothing; no fine-grained control over withdrawal amounts • Lack of state – UTXO are either spent or unspent; no multi-stage contracts or persistent variables • Blockchain-blindness – Scripts cannot access block data (nonce, timestamp, previous hash)",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-20-child-1",
+            "document_id": 20,
+            "filename": "cs521 - Topic 3.pdf",
+            "page_number": 1,
+            "section_title": "Grigore Rosu",
+            "text": "Topic 3 – Bitcoin",
+            "score": 0.015625
+          }
+        ],
+        "key_point_hits": 2
+      },
+      "plain_llm": {
+        "answer": "The **UTXO model** (Unspent Transaction Output model) is the accounting model used by Bitcoin (and many other cryptocurrencies) to track ownership of coins. It is fundamentally different from the account/balance model used by traditional banks or Ethereum.\n\nHere’s a breakdown of how it works:\n\n### Core Concept\nIn Bitcoin, there are no \"accounts\" with a balance number stored anywhere. Instead, the ledger consists of a set of **UTXOs**. A UTXO is a chunk of Bitcoin that has been sent to a specific owner (locked by a cryptographic key) and has not yet been spent.\n\nThink of it like **cash and change**:\n- You don't have a single \"balance\" of $50. Instead, you might have a $20 bill, a $10 bill, and two $10 bills in your wallet. Each bill is a UTXO.\n- When you want to buy something for $35, you can't just hand over your \"account.\" You must hand over specific bills (e.g., the $20 and one $10) that total at least $35. You get $5 in change back (a new UTXO).\n\n### How a Transaction Works\n1.  **Inputs (UTXOs to spend):** A transaction selects one or more existing UTXOs that the sender has the private key to unlock.\n2.  **Outputs (New UTXOs):** The transaction creates one or more new UTXOs.\n    - One output goes to the recipient's address (e.g., 0.35 BTC).\n    - If the input UTXOs total more than the amount being sent, a second output is created to send the \"change\" back to the sender's address (e.g., 0.15 BTC).\n3.  **Consumption:** Once a UTXO is used as an input in a valid transaction, it is **destroyed** (marked as spent) and can never be used again.\n\n### Key Properties\n- **No Double-Spending:** Because each UTXO can only be spent once, the network can easily verify that a transaction is valid by checking that all its input UTXOs are still unspent.\n- **Privacy:** It is harder to track a user's total balance because coins are scattered across many UTXOs. A user's \"balance\" is simply the sum of all UTXOs they can unlock.\n- **Parallelism:** UTXOs can be spent independently, which allows for some parallel processing and simpler verification of transactions.\n\n### Simple Example\nImagine Alice has two UTXOs: one worth 2 BTC and one worth 3 BTC. She wants to send Bob 4 BTC.\n\n1.  **Inputs:** She uses the 2 BTC UTXO and the 3 BTC UTXO (total input = 5 BTC).\n2.  **Outputs:**\n    - New UTXO of 4 BTC sent to Bob's address.\n    - New UTXO of 1 BTC sent back to Alice's address (change).\n3.  **Result:** The original 2 BTC and 3 BTC UTXOs are now spent and gone. Alice now has a new 1 BTC UTXO. Bob has a new 4 BTC UTXO.\n\nThis model is a core part of Bitcoin's security and design philosophy, emphasizing transparency and cryptographic proof over account-based state tracking.",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 5,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 4
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is fully correct, explicitly grounded in the provided course materials with source citations, and directly addresses course-specific points like statelessness and limitations. The plain LLM answer is correct and useful but lacks any reference to the course materials, making it ungrounded and not course-specific. For a study assistant, the agent answer is superior."
+      }
+    },
+    {
+      "id": "ethereum-gas",
+      "course_id": 1,
+      "question": "How does gas prevent denial-of-service or infinite loops in Ethereum?",
+      "query_type": "procedure",
+      "reference_answer": "Gas meters every computational step, so attackers must pay proportionally for computation; this prevents infinite loops and DoS attacks.",
+      "key_points": [
+        "every computational step costs gas",
+        "pay proportionally for computation",
+        "prevents infinite loops",
+        "prevents DoS"
+      ],
+      "agent": {
+        "answer": "Based solely on the provided course materials, gas prevents denial-of-service (DoS) attacks and infinite loops by metering every computational step and requiring the sender to pay proportionally for computation, bandwidth, and storage [1][2]. Because each opcode (e.g., ADD, MUL, SSTORE) consumes a defined amount of gas, an attacker must pay for every operation, making infinite loops economically infeasible [2]. If execution runs out of gas, all state changes revert, but the gas is not refunded, which prevents spam attacks [4]. Additionally, gas allocation applies to the entire call chain, so a transaction's gas limit covers all nested contract calls, preventing a sub-call from consuming unlimited resources [3][5].",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-23-child-14",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 11,
+            "section_title": "The Gas Mechanism",
+            "text": "Gas prevents infinite loops and DoS attacks by metering every computation",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-23-child-12",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 10,
+            "section_title": "The Gas Mechanism",
+            "text": "• Problem: Turing-complete code can loop forever – how to prevent DoS? • Solution: every computational step costs gas – An attacker must pay proportionally for computation, bandwidth, and storage • How it works: – Sender pre-pays gasLimit × gasPrice in Ether – Each opcode consumes a defined amount of gas – Unused gas is refunded after execution • Gas costs reflect resource consumption: – ADD = 3 gas, MUL = 5 gas, SSTORE = 20,000 gas (new slot) – Transaction data: 4 gas/zero byte, 16 gas/nonzero byte • If",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-23-child-11",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 9,
+            "section_title": "Transactions and Messages",
+            "text": "CALL opcode – Never serialized; exist only in the EVM execution environment • Gas allocation applies to the entire call chain: – If A sends TX with 1000 gas, B uses 600, calls C which uses 300, B has 100 left",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-23-child-13",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 10,
+            "section_title": "The Gas Mechanism",
+            "text": "= 5 gas, SSTORE = 20,000 gas (new slot) – Transaction data: 4 gas/zero byte, 16 gas/nonzero byte • If execution runs out of gas: – All state changes revert, but gas is NOT refunded (prevents spam)",
+            "score": 0.015625
+          },
+          {
+            "chunk_id": "doc-23-child-10",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 9,
+            "section_title": "Transactions and Messages",
+            "text": "• Transaction: a signed data package from an EOA containing: – recipient – target address – signature – identifies the sender – value – amount of Ether to transfer – data – optional payload (e.g., function call + arguments) – gasLimit – max computational steps allowed – gasPrice – fee per computational step • Messages: virtual objects sent between contracts (internal calls) – Like transactions but produced by contracts via CALL opcode – Never serialized; exist only in the EVM execution environment • Gas allocation applies to the entire call",
+            "score": 0.015384615384615385
+          }
+        ],
+        "key_point_hits": 1
+      },
+      "plain_llm": {
+        "answer": "In Ethereum, **gas** is a unit that measures the computational effort required to execute operations like transactions or smart contract calls. It prevents denial-of-service (DoS) attacks and infinite loops in the following ways:\n\n1. **Metering Computation**: Every operation in the Ethereum Virtual Machine (EVM) has a fixed gas cost. For example, a simple addition costs less gas than a storage write. This means that any computation, no matter how complex, has a known, finite cost.\n\n2. **Gas Limit per Block**: Each block has a maximum amount of gas that all transactions in that block can consume (the block gas limit). This prevents a single transaction or a set of transactions from consuming all the block's resources, which would stall the network.\n\n3. **Transaction Gas Limit**: The sender of a transaction sets a gas limit (the maximum gas they are willing to spend). If a smart contract enters an infinite loop or performs an unexpectedly large number of operations, it will eventually run out of gas. When gas runs out, the EVM halts execution and reverts all state changes (except the gas fee paid to the miner). This prevents the loop from running forever.\n\n4. **Economic Disincentive**: Since gas costs real Ether (ETH), an attacker attempting to flood the network with expensive transactions would have to pay a high price. This makes DoS attacks economically impractical, as the attacker would need to spend more than the potential damage they could cause.\n\n5. **Miner Validation**: Miners validate that each transaction has enough gas to cover its execution before including it in a block. If a transaction would run out of gas or exceed the block gas limit, it is rejected, protecting the network from resource exhaustion.\n\nIn summary, gas acts as a built-in resource pricing and limiting mechanism that ensures no single computation can monopolize the network's resources, effectively preventing both infinite loops and denial-of-service attacks.",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 5,
+          "groundedness": 2,
+          "course_specificity": 2,
+          "study_usefulness": 4
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is fully correct, explicitly grounded in the provided course materials (with citations), and directly addresses the course-specific concepts of gas metering, opcode costs, and call chain gas limits. The plain LLM answer is also correct but lacks grounding in the specific course materials and includes general Ethereum knowledge not necessarily covered in the course, making it less course-specific and less useful for a study assistant relying on the provided sources."
+      }
+    },
+    {
+      "id": "ethereum-three-tries",
+      "course_id": 1,
+      "question": "What are Ethereum's three tries used for?",
+      "query_type": "definition",
+      "reference_answer": "Ethereum uses a state trie for account state, a transaction trie to prove transaction inclusion, and a receipt trie to prove execution results.",
+      "key_points": [
+        "state trie",
+        "transaction trie",
+        "receipt trie"
+      ],
+      "agent": {
+        "answer": "Based solely on the provided course materials, Ethereum uses three tries to provide **cryptographic commitments** to three distinct types of data, with the root of each trie stored in every block header [2][3].\n\nHere is the specific purpose of each trie, as described in the sources:\n\n1.  **State Trie:** Commits to the entire state of the system, including all account balances, nonces, storage, and code hashes [3][4]. It provides deterministic lookups by address [1].\n2.  **Transaction Trie:** Commits to all transactions included in a block [3]. It proves that a specific transaction was included in a particular block [2].\n3.  **Receipt Trie:** Commits to the execution results of each transaction (status, gas used, logs) [2]. It is rebuilt fresh each block and proves the outcome of a transaction (e.g., that an event was emitted) [2]. It is separate from the Transaction Trie because receipts depend on the execution context [2].\n\n**General background:** These three tries are all implemented as Modified Merkle Patricia Tries (MPT), which combine a trie for deterministic lookups, Patricia compression for space efficiency, and Merkle hashing to allow any key-value pair to be verified with an O(log n) proof against the root hash stored in the block header [5].",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-23-child-24",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 18,
+            "section_title": "Tree vs. Trie",
+            "text": "Ethereum needs deterministic lookups by address — tries provide exactly this",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-23-child-27",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 21,
+            "section_title": "Ethereum’s Three Tries",
+            "text": "for that block – Proves a transaction was included in a block • Receipt Trie – rebuilt fresh each block – Maps tx index → execution result (status, gas, logs) – Proves tx outcome (e.g., event was emitted) – Separate from tx trie: receipts depend on execution context • All three roots in every block header",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-23-child-29",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 23,
+            "section_title": "Ethereum Block Structure",
+            "text": "Three MPTs provide cryptographic commitments to state, transactions, and receipts",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-23-child-8",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 7,
+            "section_title": "– Contract Accounts",
+            "text": "• Controlled by their contract code; activates on every message received • Can read/write to internal storage, send messages, create contracts • Every account has four fields: – nonce – transaction counter (prevents replay) – balance – amount of Wei (1 ETH = 10¹⁸ Wei) – storageRoot – hash of persistent key/value storage – codeHash – hash of EVM bytecode (empty for EOAs)",
+            "score": 0.015625
+          },
+          {
+            "chunk_id": "doc-23-child-25",
+            "document_id": 23,
+            "filename": "cs521 - Topic 4.pdf",
+            "page_number": 20,
+            "section_title": "Modified Merkle Patricia Trie (MPT)",
+            "text": "• Combines three ideas: – 1. Trie – deterministic key→value lookups – 2. Patricia – path compression, saves space – 3. Merkle – nodes store hash of children • “Modified” = Ethereum’s variant: – 16-way branching (one per nibble) – Node types: branch, extension, leaf, empty – Keys/values serialized before hashing – Root hash = Keccak-256 of entire trie • Why blockchains need this: – Root hash in header commits to all data – O(log n) proof verifies any key-value pair – Deterministic: same data → same root hash",
+            "score": 0.015384615384615385
+          }
+        ],
+        "key_point_hits": 3
+      },
+      "plain_llm": {
+        "answer": "Based on general knowledge of blockchain technology, Ethereum uses three different \"trie\" structures (specifically, Merkle Patricia Tries) to store and manage its state data efficiently. Here’s what each one is used for:\n\n1.  **State Trie (World State Trie):**\n    - **Purpose:** Stores the current global state of the Ethereum network.\n    - **Content:** It maps every Ethereum address (160-bit identifier) to its corresponding **account state**. This includes the account's nonce, balance, storage root (hash of the storage trie), and code hash (for smart contracts).\n    - **Key:** The account's address.\n    - **Value:** The encoded account state data (RLP-encoded).\n\n2.  **Storage Trie:**\n    - **Purpose:** Stores the persistent data associated with a specific smart contract account.\n    - **Content:** It is a separate trie for each contract account. It maps integer keys (storage slots) to integer values (the data stored in those slots). This is how contract variables (like mappings, arrays, and simple variables) are stored on-chain.\n    - **Key:** The storage slot index (a 256-bit integer).\n    - **Value:** The data stored in that slot (a 256-bit integer).\n    - **Note:** The root hash of this trie is stored in the State Trie as part of the contract's account state.\n\n3.  **Transaction Trie:**\n    - **Purpose:** Stores the transactions included in a specific block.\n    - **Content:** It maps the index of a transaction within a block (an integer) to the transaction data itself.\n    - **Key:** The transaction's index in the block (RLP-encoded integer).\n    - **Value:** The transaction data (RLP-encoded).\n    - **Note:** The root hash of this trie is stored in the block header (as `transactionsRoot`). It is used to prove that a specific transaction was included in a block without needing the entire block's transaction list.\n\n**Summary of their roles:**\n- **State Trie:** \"Who has what?\" (global account balances, nonces, and contract code/storage roots).\n- **Storage Trie:** \"What is the internal data of this contract?\" (specific variables for each smart contract).\n- **Transaction Trie:** \"Which transactions were in this block?\" (a receipt for the block's contents).\n\nThese three tries allow Ethereum to efficiently generate cryptographic proofs (Merkle proofs) for light clients and ensure data integrity across the network.",
+        "key_point_hits": 2
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 3,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 3
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer correctly identifies the three tries (state, transaction, receipt) as per the reference and course materials, provides explicit citations, and aligns with the key points. The plain LLM answer incorrectly includes a 'storage trie' instead of the 'receipt trie', lacks grounding in the provided sources, and does not reference course-specific content. The agent answer is more accurate, grounded, and useful for study."
+      }
+    },
+    {
+      "id": "consensus-properties",
+      "course_id": 1,
+      "question": "What are the core properties of consensus?",
+      "query_type": "definition",
+      "reference_answer": "The core properties are agreement, validity, and termination.",
+      "key_points": [
+        "agreement",
+        "validity",
+        "termination"
+      ],
+      "agent": {
+        "answer": "Based solely on the course materials, the core properties of consensus are **Agreement**, **Validity**, and **Termination** [1]. These are defined as follows:\n\n- **Agreement:** All non-faulty nodes must agree on the same value [1].\n- **Validity:** The agreed value must be a correct one (proposed by a non-faulty node) [1].\n- **Termination:** All non-faulty nodes must eventually decide on a value [1].\n\nThe sources also discuss two additional high-level properties—**Safety** and **Liveness**—which are closely related to the core properties. Safety (Consistency) means that \"nothing bad happens,\" such as nodes making conflicting decisions or reverting a decided value [2]. Liveness (Availability) means that \"something good eventually happens,\" such as the system making progress and finalizing transactions [2].\n\nA key challenge, highlighted by the FLP impossibility result, is that in an asynchronous system, no deterministic consensus algorithm can simultaneously guarantee both safety and liveness if even one process may crash [3][4]. Consequently, real-world protocols must make trade-offs or introduce additional assumptions (e.g., synchrony, randomization, or crash recovery) to achieve consensus in practice [4].",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-36-child-7",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 6,
+            "section_title": "Consensus: Key Properties",
+            "text": "• Agreement – All non-faulty nodes must agree on the same value • Validity – The agreed value must be a correct one (proposed by a non-faulty node) • Termination – All non-faulty nodes must eventually decide on a value",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-36-child-14",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 12,
+            "section_title": "Safety vs. Liveness",
+            "text": "• Safety (Consistency) – Nothing bad happens – all nodes agree, no conflicting decisions – Once a value is decided, it is never reverted • Liveness (Availability) – Something good eventually happens – the system makes progress – Nodes eventually produce new blocks / finalize transactions • FLP tells us: in asynchrony, you cannot have both perfectly • Every real protocol chooses a tradeoff between the two",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-36-child-6",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 5,
+            "section_title": "The Consensus Problem",
+            "text": "• Distributed processes agreeing on a single, correct value, despite failures • Much harder when decentralized",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-36-child-13",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 11,
+            "section_title": "The FLP Impossibility Result",
+            "text": "• 1985: Fischer, Lynch, and Paterson • No deterministic consensus algorithm can simultaneously guarantee safety and liveness in an asynchronous system where even one process may crash • Real-world protocols must introduce additional assumptions: – Crash failure recovery (e.g., Paxos, Raft) – Synchrony or partial synchrony (e.g., PBFT, Tendermint, HotStuff) – Randomization (e.g., Bitcoin, Algorand, Bullshark) – Or sacrifice safety for liveness, or vice versa",
+            "score": 0.015625
+          },
+          {
+            "chunk_id": "doc-36-child-12",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 10,
+            "section_title": "The Byzantine Generals Problem",
+            "text": "• 1982: Lamport, Shostak, and Pease • Formalization of BFT consensus • Can only tolerate up to f faulty generals if there are 3f + 1 generals",
+            "score": 0.015384615384615385
+          }
+        ],
+        "key_point_hits": 3
+      },
+      "plain_llm": {
+        "answer": "Based on general knowledge of blockchain technology, the core properties of consensus in a distributed system (like a blockchain) are typically:\n\n1.  **Safety (or Consistency):** All honest nodes in the network eventually agree on the same state (e.g., the same transaction history or the same block). No two honest nodes should have conflicting information that is considered final.\n\n2.  **Liveness (or Availability):** The system continues to operate and produce new blocks or finalize transactions. It should not get stuck, meaning that valid transactions submitted by honest users will eventually be included in the ledger.\n\n3.  **Fault Tolerance:** The system can continue to function correctly even if some nodes fail or act maliciously (Byzantine faults). This is often quantified as the ability to tolerate up to *f* faulty nodes out of *n* total nodes (e.g., *n* = 3*f* + 1 for Byzantine Fault Tolerance).\n\n4.  **Finality:** Once a transaction or block is confirmed by the consensus mechanism, it cannot be reversed or altered. (Note: Some systems, like those using Proof-of-Work, have *probabilistic finality*, meaning the probability of reversal decreases over time, while others have *absolute finality*.)\n\n5.  **Determinism:** Given the same set of inputs (e.g., pending transactions), the consensus protocol should produce the same output (e.g., the same next block) across all honest nodes.\n\nThese properties are often in tension with each other (a classic trade-off is between safety and liveness in asynchronous networks), and different consensus algorithms (e.g., Proof-of-Work, Proof-of-Stake, PBFT) prioritize them differently.",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 2,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 2
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer correctly identifies the three core properties (agreement, validity, termination) as specified in the reference answer and course materials, with explicit citations and definitions. The plain LLM answer lists different properties (safety, liveness, fault tolerance, finality, determinism) that are not the core properties asked for, and it is not grounded in the provided course materials. The agent answer is more accurate, specific to the course, and useful for study."
+      }
+    },
+    {
+      "id": "two-generals-impossibility",
+      "course_id": 1,
+      "question": "Why is agreement impossible in the Two Generals problem?",
+      "query_type": "reasoning",
+      "reference_answer": "Agreement is impossible because after every message, the sender remains uncertain whether the last acknowledgment arrived, so common knowledge cannot be achieved in finite rounds.",
+      "key_points": [
+        "sender remains uncertain",
+        "last message may not have arrived",
+        "common knowledge is impossible"
+      ],
+      "agent": {
+        "answer": "Agreement is impossible in the Two Generals problem because the generals can never achieve **common knowledge** that a message has been received, due to the possibility of messages being lost in transit.\n\nAs the course materials explain, the problem involves two generals who must coordinate an attack but can only communicate by sending messengers through a hostile valley where messengers may be captured and lost [1]. After every message, the sender becomes uncertain whether the message arrived. For example:\n- General A sends \"attack at dawn\" → A doesn't know if B received it.\n- B sends an acknowledgment (ACK) → B doesn't know if A received the ACK.\n- A sends ACK₂ → A doesn't know if B received ACK₂.\n\nThis \"uncertainty ping-pongs\" indefinitely: **whoever sent the last message cannot know it arrived** [4]. Because the last sender is always unsure, that general may not attack, causing coordination to fail [4]. The problem requires common knowledge (infinite depth of certainty), which is impossible to achieve in a finite number of message rounds over an unreliable channel [3].\n\nThe course materials further note that this impossibility is a precursor to the Byzantine Generals Problem (which adds malicious actors) and that protocols like TCP work around it practically with timeouts and retries, but not with provable safety [3].",
+        "source_count": 5,
+        "sources": [
+          {
+            "chunk_id": "doc-36-child-9",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 8,
+            "section_title": "The Two Generals Problem",
+            "text": "• Akkoyunlu, Ekanadham, and Huber (1975) – Two allied armies camped on opposite hills; an enemy city lies between them – Must attack simultaneously – attacking alone means certain defeat – Only way to coordinate: send messengers through the hostile valley • Fault model: crash faults, not Byzantine faults – Messengers may be captured and lost – messages simply disappear – Messengers are not malicious: they never forge or alter messages – This distinguishes the problem from the Byzantine Generals Problem",
+            "score": 0.01639344262295082
+          },
+          {
+            "chunk_id": "doc-36-child-5",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 4,
+            "section_title": "The Consensus",
+            "text": "Problem Distributed processes agreeing on a single value despite failures and adversaries",
+            "score": 0.016129032258064516
+          },
+          {
+            "chunk_id": "doc-36-child-11",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 9,
+            "section_title": "Two Generals: Why Agreement Is Impossible",
+            "text": "the last message cannot know it arrived – If unsure, that general may not attack → coordination fails – Requires common knowledge (infinite depth), impossible in finite rounds • Significance – Precursor to Byzantine Generals (1982), which adds malicious actors – TCP (Transmission Control Protocol) “works around” it with timeouts and retries – practical, not provably safe",
+            "score": 0.015873015873015872
+          },
+          {
+            "chunk_id": "doc-36-child-10",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 9,
+            "section_title": "Two Generals: Why Agreement Is Impossible",
+            "text": "• After every message, the sender becomes the uncertain party – A sends “attack at dawn” → A doesn’t know if B received it – B sends an acknowledgment (ACK) → B doesn’t know if A received the ACK – A sends ACK₂ → A doesn’t know if B received ACK₂ – Uncertainty ping-pongs: the last sender is always unsure • Why not stop after two ACKs? – Whoever sent the last message cannot know it arrived – If unsure, that general may not attack → coordination fails – Requires",
+            "score": 0.015625
+          },
+          {
+            "chunk_id": "doc-36-child-6",
+            "document_id": 36,
+            "filename": "cs521 - Topic 5.pdf",
+            "page_number": 5,
+            "section_title": "The Consensus Problem",
+            "text": "• Distributed processes agreeing on a single, correct value, despite failures • Much harder when decentralized",
+            "score": 0.015384615384615385
+          }
+        ],
+        "key_point_hits": 0
+      },
+      "plain_llm": {
+        "answer": "The Two Generals' Problem is a classic thought experiment in computer science that illustrates the fundamental challenge of achieving reliable agreement over an unreliable communication channel.\n\n**Why agreement is impossible:**\n\nThe core reason is that **any communication channel can fail**, and neither general can ever be certain that their last message was received. Here’s the breakdown:\n\n1. **The scenario:** Two generals, each with an army, are camped on opposite sides of a valley. They must agree on a time to attack a common enemy. They can only communicate by sending messengers through the valley, which is dangerous—messengers can be captured or killed (i.e., messages can be lost).\n\n2. **The need for acknowledgment:** If General A sends a message saying \"Attack at dawn,\" General A cannot be sure the message arrived. So General B must send an acknowledgment. But then General B cannot be sure *that* acknowledgment arrived, so General A must acknowledge the acknowledgment. This creates an **infinite regress**—each new acknowledgment requires another acknowledgment to confirm it.\n\n3. **No final confirmation:** No matter how many messages are exchanged, there is always a possibility that the last message is lost. Neither general can ever be 100% certain that the other knows the plan. This means **no finite number of messages can guarantee agreement** in the presence of even a single possible message loss.\n\n4. **Formal implication:** In distributed systems terms, the problem shows that **consensus is impossible** over an asynchronous, unreliable network. This is a foundational result that motivates the need for more sophisticated protocols (like those using cryptographic guarantees or synchronous assumptions) in real-world systems, including blockchain.\n\nIn short, agreement is impossible because **you can never know if the other party knows**, due to the unbounded chain of acknowledgments required.",
+        "key_point_hits": 0
+      },
+      "scores": {
+        "agent": {
+          "correctness": 5,
+          "groundedness": 5,
+          "course_specificity": 5,
+          "study_usefulness": 5
+        },
+        "plain_llm": {
+          "correctness": 4,
+          "groundedness": 1,
+          "course_specificity": 1,
+          "study_usefulness": 4
+        },
+        "preferred_system": "agent",
+        "rationale": "The agent answer is fully correct, explicitly grounded in the provided course materials (with source citations), highly specific to the course context, and very useful for study. The plain LLM answer is correct in general but lacks any reference to the course materials, making it ungrounded and not course-specific, though it is still useful for general understanding."
+      }
+    }
+  ]
+}
