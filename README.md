@@ -1,16 +1,41 @@
 # Study Planner Agent
 
-Retrieval-augmented study planner agent for students.
+Retrieval-augmented study planner agent for students. The system ingests course materials, extracts course topics, builds a study plan, and supports grounded topic review and course chat in one workspace.
 
-## Completed Scope
+## What It Does
+
+The current product flow is:
+
+1. Create a course workspace.
+2. Upload PDF or DOCX course materials.
+3. Parse and chunk documents into retrievable sections.
+4. Extract course topics and attach source chunks.
+5. Generate a study plan from those topics.
+6. Review each topic, ask grounded questions, and track mastery and plan progress.
+
+## System Overview
+
+```mermaid
+flowchart LR
+    A["Upload Course Materials"] --> B["Parse + Chunk Documents"]
+    B --> C["Keyword + Vector Retrieval Index"]
+    B --> D["Topic Extraction"]
+    D --> E["Topic Catalog"]
+    E --> F["Study Plan Generation"]
+    E --> G["Topic Review"]
+    C --> H["Course Chat / Search"]
+    G --> I["Mastery Tracking"]
+    F --> J["Plan Execution Tracking"]
+```
+
+## Current Scope
 
 ### Phase 0: Project Setup
 
 - FastAPI backend project
 - React frontend project
-- Docker Compose for PostgreSQL and Milvus retrieval backend
+- Docker Compose for PostgreSQL and Milvus
 - Environment variable templates
-- Basic README
 
 ### Phase 1: Auth, Courses, and Base Data Model
 
@@ -19,16 +44,13 @@ Retrieval-augmented study planner agent for students.
 - Current user endpoint
 - Course CRUD
 - User-scoped course access
-- SQLAlchemy base models
 
 ### Phase 2: Document Upload and Background Jobs
 
 - PDF and DOCX upload endpoint
-- User-scoped document records
 - Local file storage
 - Background processing job lifecycle
-- Job status endpoint
-- Frontend upload workspace with progress polling
+- Upload progress polling in the frontend
 
 ### Phase 3: Document Parsing and Chunking
 
@@ -40,34 +62,64 @@ Retrieval-augmented study planner agent for students.
 
 ### Phase 4: Retrieval Indexing
 
-- Retriever abstraction
-- PostgreSQL keyword retrieval over child chunks
-- Milvus vector retrieval over child chunks
+- PostgreSQL keyword retrieval
+- Milvus vector retrieval
 - Hybrid retrieval via reciprocal-rank fusion
-- Course-scoped search API
-- Search page in the frontend
+- Course-scoped search API and frontend search page
 
 ### Phase 5: Topic Extraction
 
-- Topic persistence in PostgreSQL
-- Course-level topic refresh pipeline
-- Topic deduplication by normalized name
+- Course topic persistence in PostgreSQL
+- Incremental document-to-topic synchronization
 - Topic source chunk references and keywords
-- Topics page in the frontend
-- Optional LLM-assisted topic merging across uploaded documents
+- Optional LLM-assisted topic merge and curation
+- Topic review page in the frontend
 
 ### Phase 6: RAG Chat
 
 - Course chat sessions in PostgreSQL
-- Synchronous chat endpoint
-- Streaming chat endpoint
+- Synchronous and streaming chat endpoints
 - Retrieved source trace on assistant messages
 - Chat page in the frontend
-- Optional OpenAI-compatible grounded answer generation with extractive fallback
+- Optional OpenAI-compatible grounded answer generation
+
+### Phase 7: Study Plan Generation
+
+- Study plan generation from active topics
+- Ordered plan items with focus points and effort estimates
+- Study plan page in the frontend
+
+### Phase 8: Interactive Review Workflow
+
+- Topic review page with source chunks
+- Topic-internal grounded Q&A
+- Topic mastery tracking
+- Study plan item execution tracking
+
+## Recommended Demo Flow
+
+Use this sequence for a live demo, presentation, or handoff walkthrough:
+
+1. Sign up or log in.
+2. Create a course with a realistic name, term, and description.
+3. Upload one or two course files and wait for processing to complete.
+4. Open `Topics` and show that extracted topics have keywords and source-backed coverage.
+5. Open `Study Plan` and generate a plan from the topic catalog.
+6. Open one plan item or topic and enter `Review topic`.
+7. Ask a topic-specific question and show grounded source snippets.
+8. Mark the topic as `reviewing` or `mastered`.
+9. Return to `Study Plan` and mark a plan item `in progress` or `completed`.
+
+If you want the most stable demo, use:
+
+- PostgreSQL, not SQLite
+- Milvus running locally through Docker Compose
+- `EMBEDDING_PROVIDER=hash` for deterministic local smoke tests
+- Real API keys only when you want LLM-assisted chat or topic extraction
 
 ## Prerequisites
 
-Install the local development tools:
+Install local development tools:
 
 ```bash
 brew install python@3.12 uv node
@@ -83,42 +135,26 @@ From the project root:
 cd study-planner-agent
 ```
 
-Start middleware:
+1. Start middleware:
 
 ```bash
 docker compose up -d
 ```
 
-Install backend dependencies:
+2. Install backend dependencies and create a local environment file:
 
 ```bash
 uv sync
 cp .env.example .env
 ```
 
-Use PostgreSQL by setting this in `.env`:
-
-```env
-DATABASE_URL=postgresql+psycopg2://<db_user>:<db_password>@127.0.0.1:5433/study_planner
-```
-
-For local Docker defaults, use the database credentials configured in `docker-compose.yml` or override them through your own uncommitted `.env`.
-
-SQLite can still be used as an explicit fallback for quick experiments, but PostgreSQL is the intended default for the project.
-
-Start backend:
+3. Start the backend:
 
 ```bash
 uv run uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-API docs:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-In a second terminal, start frontend:
+4. In a second terminal, install frontend dependencies and start the frontend:
 
 ```bash
 cd frontend
@@ -127,11 +163,117 @@ npm install
 npm run dev
 ```
 
-Frontend:
+Open:
 
 ```text
-http://127.0.0.1:5173
+Frontend:   http://127.0.0.1:5173
+Backend:    http://127.0.0.1:8000
+API docs:   http://127.0.0.1:8000/docs
 ```
+
+## Environment Variables
+
+### Backend `.env`
+
+The backend environment template is in [.env.example](/Users/shengxiangqi/Documents/UIUC/AIAgent/superMew/study-planner-agent/.env.example).
+
+Core settings:
+
+```env
+HOST=0.0.0.0
+PORT=8000
+DATABASE_URL=postgresql+psycopg2://study_planner:change-me-local-only@127.0.0.1:5433/study_planner
+JWT_SECRET_KEY=replace-with-a-strong-random-secret
+MILVUS_HOST=127.0.0.1
+MILVUS_PORT=19531
+MILVUS_COLLECTION=study_chunks
+```
+
+Embedding settings:
+
+```env
+EMBEDDING_PROVIDER=voyage
+EMBEDDING_MODEL=voyage-4-lite
+EMBEDDING_DIMENSION=1024
+VOYAGE_API_KEY=replace-with-your-voyage-api-key
+```
+
+Chat and topic extraction settings:
+
+```env
+CHAT_PROVIDER=auto
+CHAT_MODEL=gpt-4.1-mini
+CHAT_BASE_URL=https://api.openai.com/v1
+CHAT_API_KEY=
+TOPIC_EXTRACTION_MODE=auto
+```
+
+Notes:
+
+- PostgreSQL is the intended default database.
+- SQLite is only a quick local fallback:
+
+```env
+DATABASE_URL=sqlite:///./study_planner.db
+```
+
+- `EMBEDDING_PROVIDER=hash` is useful for deterministic local smoke tests without external API calls.
+- `TOPIC_EXTRACTION_MODE=auto` uses the configured chat provider only when `CHAT_API_KEY` is present. Otherwise it falls back to the local rule-based topic pipeline.
+- `CHAT_PROVIDER=auto` behaves the same way for course chat.
+
+### Frontend `frontend/.env`
+
+The frontend environment template is in [frontend/.env.example](/Users/shengxiangqi/Documents/UIUC/AIAgent/superMew/study-planner-agent/frontend/.env.example).
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+## PostgreSQL and Milvus Setup
+
+The project ships with Docker Compose middleware in [docker-compose.yml](/Users/shengxiangqi/Documents/UIUC/AIAgent/superMew/study-planner-agent/docker-compose.yml).
+
+Services:
+
+- PostgreSQL on `127.0.0.1:5433`
+- Milvus on `127.0.0.1:19531`
+- Milvus health endpoint on `http://127.0.0.1:9092/healthz`
+- Attu on `http://127.0.0.1:8081`
+- MinIO API on `http://127.0.0.1:9002`
+- MinIO Console on `http://127.0.0.1:9003`
+
+Start middleware:
+
+```bash
+docker compose up -d
+```
+
+Check status:
+
+```bash
+docker compose ps
+```
+
+Check logs:
+
+```bash
+docker compose logs -f postgres
+docker compose logs -f milvus
+```
+
+Stop middleware:
+
+```bash
+docker compose down
+```
+
+Delete local PostgreSQL and Milvus data:
+
+```bash
+docker compose down -v
+```
+
+Use `down -v` only when you intentionally want to wipe local data.
 
 ## Backend Commands
 
@@ -164,84 +306,6 @@ Compile-check backend and scripts:
 ```bash
 python3 -m compileall backend scripts
 ```
-
-Run Phase 1 smoke test after backend is running:
-
-```bash
-uv run python scripts/smoke_phase1.py
-```
-
-The script registers two users, creates a course for one user, and verifies the second user cannot access it.
-
-Run Phase 2 smoke test after backend is running:
-
-```bash
-uv run python scripts/smoke_phase2.py
-```
-
-The script uploads a placeholder DOCX, polls the background job to completion, verifies the document appears in the course, and checks cross-user job isolation.
-
-Run Phase 3 smoke test after backend is running:
-
-```bash
-uv run python scripts/smoke_phase3.py
-```
-
-The script uploads generated DOCX and PDF samples, waits for parsing and hierarchical chunking to finish, and verifies that parent and child chunks were persisted.
-
-Run Phase 4 smoke test after backend is running:
-
-```bash
-uv run python scripts/smoke_phase4.py
-```
-
-The script uploads a sample DOCX, waits for chunk processing, and verifies that PostgreSQL search returns matching child chunks for a course-scoped query.
-
-Run the Phase 4 vector smoke test after backend is running:
-
-```bash
-EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase4_vector.py
-```
-
-The script uploads a sample DOCX, waits for indexing to finish, and verifies that vector and hybrid retrieval return course-scoped results through Milvus. Keep `EMBEDDING_PROVIDER=voyage` in your real `.env`; the `hash` override is only for deterministic local verification without hitting the remote embedding API.
-
-Run the Phase 5 smoke test after backend is running:
-
-```bash
-EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase5.py
-```
-
-The script uploads a sample DOCX, waits for topic extraction to finish, and verifies that topics are deduplicated, have keywords, and retain source chunk references.
-
-To enable LLM-assisted topic extraction, set:
-
-```env
-TOPIC_EXTRACTION_MODE=auto
-CHAT_BASE_URL=https://api.deepseek.com/v1
-CHAT_MODEL=deepseek-chat
-CHAT_API_KEY=<your-api-key>
-```
-
-In `auto` mode, the backend keeps a course topic set in PostgreSQL, passes the current topic catalog plus the newly processed document candidates to the LLM, and asks it to merge the new material into existing high-level study topics or create a new topic only when needed. If no API key is present, the backend falls back to the local rule-based extractor.
-
-Run the Phase 6 smoke test after backend is running:
-
-```bash
-EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase6.py
-```
-
-The script uploads a sample DOCX, waits for indexing, sends a course question to the chat endpoint, and verifies that the saved session contains a sourced assistant answer.
-
-To enable LLM-grounded chat generation, set these in `.env`:
-
-```env
-CHAT_PROVIDER=auto
-CHAT_MODEL=gpt-4.1-mini
-CHAT_BASE_URL=https://api.openai.com/v1
-CHAT_API_KEY=<your-api-key>
-```
-
-If `CHAT_API_KEY` is unset, the backend falls back to the local extractive chat baseline so the app still works without an LLM provider.
 
 ## Frontend Commands
 
@@ -276,71 +340,62 @@ Preview production build:
 npm run preview
 ```
 
-## Middleware
+## Smoke Tests
 
-Start PostgreSQL and Milvus:
+Run these after the backend is running.
 
-```bash
-docker compose up -d
-```
-
-PostgreSQL is exposed on host port `5433`.
-
-Milvus is exposed on host port `19531`.
-
-Attu is exposed on host port `8081`.
-
-Check middleware status:
+Phase 1:
 
 ```bash
-docker compose ps
+uv run python scripts/smoke_phase1.py
 ```
 
-View logs:
+Phase 2:
 
 ```bash
-docker compose logs -f postgres
-docker compose logs -f milvus
+uv run python scripts/smoke_phase2.py
 ```
 
-Stop middleware:
+Phase 3:
 
 ```bash
-docker compose down
+uv run python scripts/smoke_phase3.py
 ```
 
-Stop middleware and remove persisted local volumes:
+Phase 4 keyword retrieval:
 
 ```bash
-docker compose down -v
+uv run python scripts/smoke_phase4.py
 ```
 
-Use `down -v` only when you intentionally want to delete local PostgreSQL and Milvus data.
+Phase 4 vector retrieval:
 
-For PostgreSQL, set:
-
-```env
-DATABASE_URL=postgresql+psycopg2://<db_user>:<db_password>@127.0.0.1:5433/study_planner
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase4_vector.py
 ```
 
-SQLite remains optional for quick throwaway local runs only:
+Phase 5 topic extraction:
 
-```env
-DATABASE_URL=sqlite:///./study_planner.db
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase5.py
 ```
 
-## Service URLs
+Phase 6 chat:
 
-```text
-Backend API:     http://127.0.0.1:8000
-API docs:        http://127.0.0.1:8000/docs
-Frontend:        http://127.0.0.1:5173
-PostgreSQL:      127.0.0.1:5433
-Milvus:          127.0.0.1:19531
-Milvus health:   http://127.0.0.1:9092/healthz
-MinIO API:       http://127.0.0.1:9002
-MinIO Console:   http://127.0.0.1:9003
-Attu:            http://127.0.0.1:8081
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase6.py
+```
+
+Phase 7 study plan:
+
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase7.py
+```
+
+Phase 8 topic review:
+
+```bash
+EMBEDDING_PROVIDER=hash uv run python scripts/smoke_phase8.py
 ```
 
 ## Typical Development Flow
@@ -363,6 +418,129 @@ Then open:
 
 ```text
 http://127.0.0.1:5173
+```
+
+## Deployment Notes
+
+This project is still a local-first development setup, but these are the practical deployment assumptions:
+
+- Backend: FastAPI + Uvicorn
+- Frontend: Vite build output
+- Database: PostgreSQL
+- Vector store: Milvus
+- Object/file storage: local filesystem today
+
+Before deploying anywhere shared:
+
+1. Move secrets out of checked-in `.env` files.
+2. Use a persistent PostgreSQL instance.
+3. Use a persistent Milvus deployment.
+4. Replace local file storage with a durable storage target if multi-machine deployment is required.
+5. Set real API keys only if you want LLM-assisted chat or topic extraction.
+
+## Common Issues and Fixes
+
+### Backend starts but topic extraction or chat falls back to local mode
+
+Cause:
+
+- `CHAT_API_KEY` is empty
+- or `CHAT_PROVIDER` / `TOPIC_EXTRACTION_MODE` is configured for fallback behavior
+
+Check:
+
+```env
+CHAT_PROVIDER=auto
+TOPIC_EXTRACTION_MODE=auto
+CHAT_API_KEY=<your-key>
+```
+
+### Upload works but vector retrieval is empty
+
+Cause:
+
+- Milvus is not healthy
+- or embedding configuration is mismatched
+
+Check:
+
+```bash
+docker compose ps
+curl http://127.0.0.1:9092/healthz
+```
+
+Also verify:
+
+```env
+MILVUS_HOST=127.0.0.1
+MILVUS_PORT=19531
+EMBEDDING_DIMENSION=1024
+```
+
+### PostgreSQL connection fails on startup
+
+Cause:
+
+- Docker Compose middleware is not running
+- or `DATABASE_URL` does not match the local container credentials
+
+Check:
+
+```bash
+docker compose ps
+docker compose logs -f postgres
+```
+
+Expected default:
+
+```env
+DATABASE_URL=postgresql+psycopg2://study_planner:change-me-local-only@127.0.0.1:5433/study_planner
+```
+
+### Frontend loads but API calls fail
+
+Cause:
+
+- backend is not running
+- or `VITE_API_BASE_URL` points to the wrong URL
+
+Check:
+
+```env
+VITE_API_BASE_URL=http://127.0.0.1:8000
+```
+
+Then confirm:
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+### You want a deterministic local demo without external APIs
+
+Use:
+
+```env
+EMBEDDING_PROVIDER=hash
+CHAT_API_KEY=
+TOPIC_EXTRACTION_MODE=rule
+CHAT_PROVIDER=extractive
+```
+
+That disables remote LLM dependence and makes local demos more predictable.
+
+## Service URLs
+
+```text
+Backend API:     http://127.0.0.1:8000
+API docs:        http://127.0.0.1:8000/docs
+Frontend:        http://127.0.0.1:5173
+PostgreSQL:      127.0.0.1:5433
+Milvus:          127.0.0.1:19531
+Milvus health:   http://127.0.0.1:9092/healthz
+MinIO API:       http://127.0.0.1:9002
+MinIO Console:   http://127.0.0.1:9003
+Attu:            http://127.0.0.1:8081
 ```
 
 ## Before Pushing to GitHub
